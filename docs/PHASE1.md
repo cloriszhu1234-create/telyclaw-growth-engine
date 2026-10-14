@@ -1,5 +1,7 @@
 # Phase 1 — verified assignment and implementation plan
 
+Historical original-MVP plan. For the later on-demand X enhancement, see [LIVE_X.md](LIVE_X.md) and the current README; original scope decisions below are not the current implementation status.
+
 Source: attached seven-page `TelyClaw_Growth_Lead_Challenge (1).pdf`, visually reviewed in full. English below translates the readable Chinese requirements. The orange annotation obscures a README line on p.7: **Pending recruiter clarification**. No contents are inferred. This document is the plan; implementation status is recorded in README and VALIDATION.
 
 ## What the company wants

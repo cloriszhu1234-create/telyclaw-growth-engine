@@ -12,7 +12,7 @@ from app.demo import CLOCK
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv('DATABASE_PATH',str(tmp_path/'test.db'))
-    monkeypatch.delenv('OPENAI_API_KEY',raising=False)
+    monkeypatch.setenv('OPENAI_API_KEY','')
     with TestClient(app) as client:
         yield client
 
@@ -102,7 +102,7 @@ def test_invalid_inputs_and_missing_records(client):
         d=make_draft(client)
         assert client.put('/api/drafts/'+d['id'],json={'text':text}).status_code==422
     assert client.post('/api/analyze',json={'hours':3,'mode':'demo'}).status_code==422
-    assert client.post('/api/analyze',json={'hours':4,'mode':'live'}).status_code==422
+    assert client.post('/api/analyze',json={'hours':4,'mode':'streaming'}).status_code==422
     assert client.post('/api/accounts',json={'handle':'<script>'}).status_code==422
     assert client.get('/api/drafts/missing/export').status_code==404
     assert client.post('/api/drafts',json={'analysis_id':'missing','topic_id':'0'}).status_code==404

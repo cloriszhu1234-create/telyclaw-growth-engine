@@ -15,6 +15,12 @@ def connect():
 def init():
     with connect() as con:
         con.executescript('''
+        CREATE TABLE IF NOT EXISTS x_accounts(handle TEXT PRIMARY KEY, payload TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS x_posts(id TEXT NOT NULL, handle TEXT NOT NULL, created_at TEXT NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(handle,id));
+        CREATE TABLE IF NOT EXISTS x_control(id INTEGER PRIMARY KEY CHECK(id=1), next_fetch_at REAL NOT NULL DEFAULT 0, blocked_until REAL NOT NULL DEFAULT 0);
+        INSERT OR IGNORE INTO x_control(id) VALUES(1);
+        CREATE TABLE IF NOT EXISTS x_requests(id INTEGER PRIMARY KEY, attempted_at REAL NOT NULL);
+        CREATE INDEX IF NOT EXISTS x_posts_handle ON x_posts(handle,created_at);
         CREATE TABLE IF NOT EXISTS accounts(handle TEXT PRIMARY KEY, enabled INTEGER NOT NULL DEFAULT 1);
         CREATE TABLE IF NOT EXISTS posts(id TEXT PRIMARY KEY, handle TEXT NOT NULL, text TEXT NOT NULL,
           created_at TEXT NOT NULL, likes INTEGER NOT NULL, reposts INTEGER NOT NULL, replies INTEGER NOT NULL,

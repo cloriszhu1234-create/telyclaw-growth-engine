@@ -5,11 +5,12 @@ import re
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
-from . import db, demo
+from . import db, demo, x_api
+from dotenv import load_dotenv
 from .trends import DEFAULT_BRIEF, detect
 from .content import generate
 
@@ -18,6 +19,7 @@ STATIC = Path(__file__).parent / 'static'
 
 @asynccontextmanager
 async def lifespan(app):
+    load_dotenv(Path(__file__).resolve().parents[1] / '.env', override=False)
     db.init()
     with db.connect() as con:
         if not con.execute("SELECT 1 FROM settings WHERE key='initialized'").fetchone():
@@ -30,6 +32,32 @@ async def lifespan(app):
 
 app = FastAPI(title='TelyClaw Growth Engine', lifespan=lifespan)
 app.mount('/static', StaticFiles(directory=STATIC), name='static')
+
+
+@app.exception_handler(x_api.XError)
+async def x_error(request: Request, exc: x_api.XError):
+    return JSONResponse(status_code=exc.status, content={'detail': {
+        'code':exc.code, 'message':str(exc), 'retry_at':x_api.stamp(exc.retry_at)}})
+
+
+@app.get('/api/x/status')
+def x_status(username: str = Query(default='elonmusk', pattern=r'^@?[A-Za-z0-9_]{1,15}$')):
+    # Local cache/config inspection only. Never contacts X.
+    return x_api.status(username)
+
+
+class FetchX(BaseModel):
+    username: str = Field(default='elonmusk', pattern=r'^@?[A-Za-z0-9_]{1,15}$')
+    limit: int = Field(default=5, ge=5, le=10)
+
+
+@app.post('/api/x/fetch')
+def fetch_x(value: FetchX, request: Request):
+    # Browser cross-site requests must never spend the local user's API budget.
+    origin = request.headers.get('origin')
+    if request.headers.get('sec-fetch-site') == 'cross-site' or (origin and origin.rstrip('/') != str(request.base_url).rstrip('/')):
+        raise HTTPException(403, 'Cross-origin live fetching is not allowed')
+    return x_api.fetch_latest(value.username, value.limit)
 
 
 @app.get('/')
@@ -138,24 +166,32 @@ def import_posts(value: Import):
 class Analyze(BaseModel):
     hours: int = 4
     mode: str = 'demo'
+    username: str = Field(default='elonmusk', pattern=r'^@?[A-Za-z0-9_]{1,15}$')
 
 
 @app.post('/api/analyze')
 def analyze(value: Analyze):
-    if value.hours not in (1,4,24,168) or value.mode not in ('demo','imported'):
+    if value.hours not in (1,4,24,168) or value.mode not in ('demo','imported','live'):
         raise HTTPException(422,'Choose a supported window and dataset')
     clock = demo.CLOCK if value.mode=='demo' else datetime.now(timezone.utc)
     start, earlier = clock-timedelta(hours=value.hours), clock-timedelta(hours=value.hours*2)
     with db.connect() as con:
-        rows = [dict(r) for r in con.execute('SELECT p.* FROM posts p JOIN accounts a ON p.handle=a.handle WHERE a.enabled=1 AND p.provenance=?',
-                    ('synthetic' if value.mode=='demo' else 'imported',))]
+        if value.mode == 'live':
+            rows = x_api.cached_posts(x_api.username(value.username))
+        else:
+            rows = [dict(r) for r in con.execute('SELECT p.* FROM posts p JOIN accounts a ON p.handle=a.handle WHERE a.enabled=1 AND p.provenance=?',
+                        ('synthetic' if value.mode=='demo' else 'imported',))]
         current = [p for p in rows if start <= datetime.fromisoformat(p['created_at']) <= clock]
         prior = [p for p in rows if earlier <= datetime.fromisoformat(p['created_at']) < start]
         brand = brief_value(con)
         result = dict(id=str(uuid4()), mode=value.mode, clock=clock.isoformat(), hours=value.hours,
             post_count=len(current), account_count=len({p['handle'] for p in current}),
             topics=detect(current,prior,clock,value.hours,brand), brief=brand,
-            analyzed_at=datetime.now(timezone.utc).isoformat())
+            analyzed_at=datetime.now(timezone.utc).isoformat(),
+            source_warning=('This is a cached sample from @'+x_api.username(value.username)+
+                ', not a platform-wide trend. One account cannot establish cross-account momentum. '
+                'Replies, quotes and reposts are labeled; fetched time windows may be incomplete.' if value.mode=='live' else None),
+            live_status=x_api.status(value.username) if value.mode=='live' else None)
         save(con,'analyses',result)
     return result
 
@@ -179,7 +215,8 @@ def draft(value: Generate):
             raise HTTPException(502,'AI provider failed. Check server configuration or remove the key to use labeled local templates.')
         now = datetime.now(timezone.utc).isoformat()
         result = dict(id=str(uuid4()), analysis_id=analysis['id'], topic_id=topic['id'], topic_title=topic['title'],
-            mode=analysis['mode'], angles=angles, text=text, provider=provider, status='draft',
+            mode=analysis['mode'], sources=[{'handle':p['handle'],'url':p.get('url'),'post_type':p.get('post_type'),'provenance':p['provenance']} for p in topic['evidence']],
+            source_warning=analysis.get('source_warning'), angles=angles, text=text, provider=provider, status='draft',
             created_at=now, updated_at=now, approved_at=None)
         save(con,'drafts',result)
     return result
