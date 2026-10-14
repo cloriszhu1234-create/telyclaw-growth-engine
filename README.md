@@ -2,9 +2,9 @@
 
 A runnable, single-user social listening and content opportunity MVP for the TelyClaw Growth Lead challenge. It takes selected account posts through topic detection, explainable ranking, content angles, human editing, approval and text export.
 
-**Status: functional offline MVP, not a completed hiring submission.** Page 7's obscured README line is **Pending recruiter clarification**. The final video must still be recorded. Product positioning needs confirmation.
+**Status: functional Demo MVP with an optional on-demand Live X adapter, not a completed hiring submission.** Page 7's obscured README line is **Pending recruiter clarification**. The final video must still be recorded. Product positioning needs confirmation.
 
-**Data honesty:** Demo Mode uses six fictional accounts and 48 synthetic posts with synthetic source engagement. There is no live X connection, automated publishing or measured growth. Local topic detection uses machine learning; default draft generation uses clearly labeled editorial templates, **not an LLM**. An optional OpenAI adapter exists but has not been verified against the real API.
+**Data honesty:** Demo Mode uses six fictional accounts and 48 synthetic posts with synthetic source engagement. Optional Live X mode uses only officially fetched, cached X data; it is disabled by default and has not been exercised against real X in development. There is no automated publishing or measured growth. Local topic detection uses machine learning; default draft generation uses clearly labeled editorial templates, **not an LLM**. An optional OpenAI adapter exists but has not been verified against the real API.
 
 ## Run locally
 
@@ -19,12 +19,12 @@ python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Open **http://localhost:8000**. No API keys, Docker, frontend build or database service required. Leave the terminal open. Ctrl+C stops the server. Data persists in `data/growth.db`; restart the app to continue. To start a completely fresh personal demo, stop the app and remove that database (this deletes saved accounts/imports/drafts).
+Open **http://localhost:8000**. No API keys, Docker, frontend build or database service required. Leave the terminal open. Ctrl+C stops the server. Data persists in `data/growth.db`; restart the app to continue. Keep this database when updating: it preserves saved accounts/drafts and Live request counters. Do not delete or replace it to reset the Live budget.
 
 ## Demonstrate the workflow
 
 1. Open **Sources & settings**. Inspect six fictional handles; add/remove accounts or toggle monitoring.
-2. In **Opportunities**, keep **Synthetic demo**, choose **Last 4 hours**, and analyze. Change to **Last 1 hour** and reanalyze to show genuinely filtered data.
+2. In **Opportunities**, keep **Demo Data (synthetic)**, choose **Last 4 hours**, and analyze. Change to **Last 1 hour** and reanalyze to show genuinely filtered data.
 3. Select a ranked trend. Inspect score factors, keyword matches, distinct authors, representative-source summary and source-post evidence. Off-topic football remains visible with a low-relevance flag, outside the top recommendations.
 4. Choose **Create angles & draft**. The studio shows Opinion, Educational and Product angles plus a suggested X post.
 5. Edit the post, save and approve. Only approved text can be exported. Changing it revokes approval. Export is a text download for manual publishing, never a claim that an X post was published.
@@ -44,7 +44,7 @@ SQLite persistence      scikit-learn local NLP
                      Local templates or optional OpenAI
 ```
 
-`app/db.py` owns SQLite initialization; `demo.py` owns fictional fixtures; `trends.py` owns detection/ranking; `content.py` owns replaceable draft generation; `main.py` validates data and controls workflow; `app/static/` contains the responsive dashboard. Tests use separate temporary databases.
+`app/x_api.py` owns official on-demand X fetching, normalization, caching and persistent spending safeguards; `app/db.py` owns SQLite initialization; `demo.py` owns fictional fixtures; `trends.py` owns detection/ranking; `content.py` owns replaceable draft generation; `main.py` validates data and controls workflow; `app/static/` contains the responsive dashboard. Tests use separate temporary databases.
 
 Accounts, posts, analysis evidence snapshots, brand settings and drafts are persisted. Exact duplicates are removed during topic analysis, not from the stored raw dataset. An analysis stores its original brief and data context so later configuration changes do not silently rewrite an existing draft's rationale. Editing approved draft text clears its approval.
 
@@ -95,13 +95,86 @@ In **Sources & settings**, upload JSON shaped as:
 }
 ```
 
-Use recent actual timestamps for a current-window demonstration. Uploads accept up to 1,000 posts; handles are 1–15 letters/digits/underscores, text 1–5,000 characters, engagement nonnegative integers, and dates timezone-aware/not future-dated beyond five minutes. An invalid record rejects the whole batch. Importing the same source ID updates it without multiplying rows. Accounts are added automatically; disabled existing accounts remain disabled. Demo/import IDs are namespaced separately.
+Use recent actual timestamps for a current-window demonstration. Uploads accept up to 1,000 posts; handles are 1–15 letters/digits/underscores, text 1–5,000 characters, engagement nonnegative integers, and dates timezone-aware/not future-dated beyond five minutes. An invalid record rejects the whole batch. Importing the same source ID updates it without multiplying rows. Accounts are added automatically; disabled existing accounts remain disabled. Demo/import IDs are namespaced separately. Live X posts are stored in a separate table and never mixed with demo/import data.
 
-Demo data uses a visible fixed **14 Oct 2026, 10:00 UTC** scenario clock; imports use the actual current time. UI dates display Asia/Shanghai (CST). Data modes never mix. Imported data is user-supplied and unverified; importing is not proof of a live integration. No synthetic outcomes are attributed to generated content.
+Demo data uses a visible fixed **14 Oct 2026, 10:00 UTC** scenario clock; imports use the actual current time. UI dates display Asia/Shanghai (CST). Data modes never mix. Imported data is user-supplied and unverified; importing is not proof of a live integration. Live X uses current time and only the selected account’s cached posts. No synthetic outcomes are attributed to generated content.
 
-## Production X acquisition plan
+## Live X monitoring: macOS setup and safe operation
 
-Implement an official-X adapter only after verifying current API plan, timeline permissions, account IDs, pricing and retention obligations. Fetch selected accounts with pagination/checkpoints, normalize UTC timestamps, upsert post IDs, respect rate-limit headers, retry transient failures with backoff, and expose ingestion freshness/errors. Schedule server-side pulls only once this adapter works. Write/publishing and analytics permissions are separate. No scraper or fabricated live connection is included.
+This feature is **on-demand fetching, not streaming**. You can inspect Live mode with **$0 credits**: it will explain missing credentials or disabled fetching without contacting X. Demo remains the default on every page load. Changing modes, inspecting status, analyzing a cache, generating drafts, approving and exporting never trigger an X request.
+
+To update an existing checkout on your Mac, open Terminal in the project folder:
+
+```sh
+git fetch origin
+git switch feat/live-x-monitoring
+git pull --ff-only origin feat/live-x-monitoring
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Stop an older server with Control+C first. For a fresh download, select branch **feat/live-x-monitoring** on GitHub, choose Code → Download ZIP, extract it, and follow **Run locally** above. No Git installation is needed for the ZIP option. Open http://localhost:8000 in Safari/Chrome. Leave Terminal open while reviewing the app.
+
+### Private environment configuration
+
+1. In the project folder, copy `.env.example` to `.env` (`cp .env.example .env`). On macOS, `Command+Shift+.` reveals hidden files in Finder.
+2. Edit `.env` locally using a plain-text editor (for example VS Code). Set `X_BEARER_TOKEN` to your saved Bearer Token, without a `Bearer ` prefix. **Never paste it into chat, the dashboard, screenshots or a GitHub issue.** There is no frontend token field.
+3. **Keep `X_LIVE_ENABLED=false` while your balance is $0.** Adding the token alone does not enable requests. You can also leave the token blank to review the missing-credentials state.
+4. After you separately confirm API access, current endpoint costs and adequate credits with X, set `X_LIVE_ENABLED=true` locally and restart the server. This is your explicit enablement of manual potentially billable reads. The app never purchases credits or initiates a billing transaction.
+5. Select **Live X (manual / cached)**. Keep monitored username `elonmusk` and the default five posts. Click **Fetch latest posts** only when you intend to use X API access, then **Analyze signals** to analyze the local cache.
+
+Environment variables are read server-side. `.env` is optional and never overrides an existing shell environment variable. `.env` and `.env.*` are ignored by Git except the sanitized `.env.example`. After changing a shell variable, restarting with a changed `.env` alone may not override that shell value. No token value is returned by the API, stored in SQLite or deliberately logged. Do not enable HTTP debug logging or record your `.env` on screen.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `X_BEARER_TOKEN` | empty | Private read-only app token; no request possible when missing |
+| `X_LIVE_ENABLED` | `false` | Must be explicitly `true` to allow manual X requests |
+| `DATABASE_PATH` | `data/growth.db` | SQLite storage; keep one shared database for consistent request limits |
+| `OPENAI_API_KEY` | empty | Existing optional LLM content provider; separate costs/access from X |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Existing optional LLM model |
+
+### Implemented X endpoints and data
+
+- `GET https://api.x.com/2/users/by/username/{username}` resolves the account. Successful user IDs are cached for seven days.
+- `GET https://api.x.com/2/users/{id}/tweets` requests one page, default `max_results=5` (selectable up to 10), with `created_at,public_metrics,referenced_tweets,author_id`.
+- `GET /api/x/status` only inspects local configuration/cache; `POST /api/x/fetch` is the only app operation that can contact X. The account input supports other valid usernames, one account per run.
+- Text, source ID, timestamp, original X link, author ID when supplied, reference types and available public metrics are normalized. Original/reply/quote/repost labels are visible; combinations are preserved in the data. A repost is timeline activity, not necessarily an original statement by the monitored person.
+- Missing metrics stay `null`/`N/A`, never fabricated zero. If likes/reposts/replies needed for a topic score are incomplete, its engagement factor is excluded and the remaining weights are rescaled. Known zero engagement remains a real zero. The UI shows effective weights and explains the exclusion.
+- Live drafts retain original source links and a single-account limitation warning. The existing templates/optional LLM, human editing, approval and export are reused. No automatic X publishing is implemented.
+
+### Cost safeguards
+
+- No X calls on page load, mode switch, analysis, content generation or app startup. No scheduler, polling, streaming connection, pagination or automatic retries.
+- A fresh account cache (15 minutes) is reused with **zero** outbound requests, including when credentials have since been removed. Stale caches remain available for analysis but are labeled stale; a failed refresh never becomes demo data.
+- Global 10-minute cooldown across usernames/processes. The initial resolution + timeline normally costs **two API requests**; later timeline refreshes normally use one. Failed attempts count toward the budget.
+- Persistent hard cap of **10 outbound X HTTP attempts per UTC day**, shared across accounts. First fetch is blocked if fewer than two slots remain and lookup is required. Caps/cooldowns survive app restarts; concurrent refreshes cannot bypass them. A separate/deleted database has separate counters, so do not use multiple database copies to manage one billing account.
+- HTTP 429 respects reset/Retry-After headers with a conservative 15-minute minimum wait; a success reporting zero remaining requests also creates a hold. No retry runs automatically. Redirects are disabled so Authorization is not forwarded to another host.
+- These are request-count controls, **not a dollar budget or guaranteed free usage**. X may charge per returned resource; five posts can still be billable. Verify current pricing, plan limits and billing in the X Developer portal. The app cannot inspect your credit balance.
+
+### Troubleshooting
+
+| State | What it means / action |
+|---|---|
+| Missing credentials | Set the private server variable and restart; no X request was made |
+| Fetching disabled | Leave it off at $0; confirm access/credits separately before enabling |
+| Loading | One explicit fetch is running; button is disabled until it finishes |
+| Cached / stale | See last successful fetch time, last response count and unique cached count; analyze without another read |
+| 401 authentication | Check/rotate the token privately; old cache is retained |
+| 403 access denied | Check app permissions, API plan and endpoint access |
+| Payment / insufficient credits | X reported HTTP 402 or a recognized credit restriction; check the portal; the app never buys credits |
+| 429 / cooldown / daily cap | Wait until shown retry/reset time; no automatic retry, and cache remains usable |
+| Network/service error | Check connection/API availability and retry manually after cooldown; no synthetic substitution |
+| Empty response/window | Account has no returned eligible posts, or recent cached posts fall outside your window; try a wider analysis window without refetching |
+| Unexpected API response | Cache is preserved; current endpoint/schema access needs checking; no raw provider error text is exposed |
+
+Last successful fetch time does not mean every post in a selected time window was retrieved. The single page may omit older posts even inside the window. With only @elonmusk, these are **account-level content signals, not platform-wide trends**. Broader coverage, complete historical windows, original-author expansion for reposts, full quote bodies, streaming, scheduled monitoring, spending in currency and real publication analytics remain **planned/unimplemented**. Confirm the current official endpoint contract/access before your first funded run; real X was deliberately not contacted during development.
+
+### Interview flow with $0 credits
+
+1. Start in **Demo Data** and demonstrate all existing growth/content features.
+2. Switch to **Live X** and show `@elonmusk`, five-post default, missing/disabled credentials, cache/budget fields and the single-account caveat. Explain that switching does not contact X.
+3. Keep real fetching disabled. Say: “This integration uses the official API with persistent limits; live success and error paths were tested with mocked responses, without consuming paid credits.”
+4. After funded access is separately approved and available, manually fetch, inspect source/type/metrics and links, analyze, draft, review, approve and export. Return to Demo explicitly if desired—there is never an automatic fallback.
 
 ## Growth measurement
 
@@ -118,15 +191,16 @@ python -m pytest -q
 # Linux default: /usr/bin/chromium
 # Or set CHROMIUM_PATH to your installed executable.
 python tests/browser_smoke.py
+python tests/live_browser_smoke.py
 node --check app/static/app.js
 ```
 
-The browser test starts its own temporary-database server on port 8001, checks desktop/mobile workflow and saves screenshots under `work/browser/`. Node is only needed for the optional JavaScript syntax check, not to run the app.
+The original browser test uses a temporary database on port 8001; the Live test uses port 8002 and an in-process MockTransport. Both save screenshots under `work/browser/`. Tests default-deny X traffic and blank real service keys; the Live suite uses non-secret placeholders, never actual credentials. Node is only needed for the optional JavaScript syntax check, not to run the app.
 
 ## Current limitations and submission status
 
 - Page 7 obscured README requirement: **Pending recruiter clarification**; no text inferred.
-- No live X ingestion, X publishing, automatic scheduling, or real generated-content performance tracking.
+- Live X on-demand ingestion is implemented behind explicit enablement, but real endpoint authentication/credits are unverified. X publishing, automatic scheduling and real generated-content performance tracking are not implemented.
 - Local English lexical clustering can split a topic, merge unrelated topics, miss synonyms, and does not verify truth or coordination. Exact copies are deduplicated; semantic duplicates are not reliably detected. Keyword titles and local content need editorial polish.
 - Optional LLM integration is present but not live-tested; local templates are not equivalent to LLM generation.
 - No authentication, tenant separation, team roles, public-hosting hardening or background job infrastructure. Run on localhost for this single-user challenge. Do not expose publicly without those controls and request limits.

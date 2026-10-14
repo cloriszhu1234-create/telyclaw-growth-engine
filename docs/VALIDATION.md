@@ -1,4 +1,25 @@
-# MVP validation — 14 October 2026
+# Validation — 14 October 2026
+
+## Live X enhancement — latest results
+
+Branch: `feat/live-x-monitoring`, based on merged main `f13eaec`.
+
+- **45 tests passed, 1 dependency deprecation warning** (`python -m pytest -q`, final run 1.87s). Original minimum-acceptance behavior remains covered.
+- Original desktop/mobile browser smoke test **passed**, extended to check Live missing-credential state, zero-post Live analysis and return to Demo.
+- Mocked Live browser smoke test **passed**: no auto-fetch, five-post default, cache reuse, original source links/type labels, N/A engagement, three angles, approval/export, credit error preserving stale cache, mobile layout and Demo/Live isolation.
+- JavaScript syntax check and Python compilation **passed**. Both browser tests started Uvicorn successfully and exercised real local HTTP endpoints on isolated test databases.
+- Reviewed screenshots of the Live panel, score explanation and credit error state. Mock post text explicitly says MOCK TEST DATA. Screenshots are test artifacts, not claims of live X results.
+- **Zero real X or OpenAI requests; no paid API credits consumed or billing actions initiated.** X calls use HTTPX MockTransport. The test default denies the X client unless a mock is installed. Non-secret placeholders are used instead of actual credentials.
+- `.env` and `.env.local` are ignored; the only intended tracked environment file is sanitized `.env.example`. Credentials are not returned or persisted by the X adapter. Cross-origin browser fetches are rejected.
+
+Coverage includes normalization of original/reply/quote/repost and combined flags; missing and known-zero metrics; missing/disabled credentials; official endpoint/limit construction; 401/403/402/404/429/5xx; recognized credit restrictions; network and malformed responses; absolute reset and seconds/HTTP-date Retry-After; zero remaining quota; cache/ID TTL, deduplication/metric updates, global cooldown, UTC daily cap, concurrent refreshes, restart persistence, additional usernames, mode isolation, scoring and old-database preservation.
+
+Real endpoint authorization, current API plan/credit availability, actual X payloads and optional real LLM generation remain **intentionally unverified**. No streaming, auto-publishing, scheduling or measured growth is implemented. See [LIVE_X.md](LIVE_X.md) and README for operation and limitations.
+
+---
+
+## Original MVP baseline (historical)
+
 
 Status: functional local MVP validated; final hiring submission remains open.
 

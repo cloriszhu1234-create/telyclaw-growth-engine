@@ -1,6 +1,6 @@
 # 3–5 minute demonstration script
 
-Target: about 4 minutes. Record browser and voice. Use a fresh personal demo database, default provisional brief, and Synthetic demo. Show that this is synthetic data and local template drafting, not a live X/LLM integration.
+Target: about 4 minutes. Record browser and voice. For the later Live X enhancement, use the $0-credit interview flow in README; keep real fetching disabled until API access/credits are separately confirmed. Use a fresh personal demo database, default provisional brief, and Synthetic demo. Show that this is synthetic data and local template drafting, not a live X/LLM integration.
 
 | Time | Screen/action | Narrative |
 |---|---|---|
