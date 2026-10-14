@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
-from . import db, demo, x_api
+from . import db, demo, x_api, manual
 from dotenv import load_dotenv
 from .trends import DEFAULT_BRIEF, detect
 from .content import generate
@@ -31,6 +31,7 @@ async def lifespan(app):
 
 
 app = FastAPI(title='TelyClaw Growth Engine', lifespan=lifespan)
+app.include_router(manual.router)
 app.mount('/static', StaticFiles(directory=STATIC), name='static')
 
 
@@ -87,6 +88,7 @@ def state():
         return dict(accounts=[dict(r) for r in con.execute('SELECT * FROM accounts ORDER BY handle')],
             drafts=[json.loads(r['payload']) for r in con.execute('SELECT payload FROM drafts ORDER BY rowid DESC')],
             brief=brief_value(con), demo_clock=demo.CLOCK.isoformat(),
+            manual_posts=con.execute('SELECT count(*) FROM manual_posts').fetchone()[0],
             imported_posts=con.execute("SELECT count(*) FROM posts WHERE provenance='imported'").fetchone()[0])
 
 
@@ -171,26 +173,38 @@ class Analyze(BaseModel):
 
 @app.post('/api/analyze')
 def analyze(value: Analyze):
-    if value.hours not in (1,4,24,168) or value.mode not in ('demo','imported','live'):
+    if value.hours not in (1,4,24,168) or value.mode not in ('demo','imported','live','manual'):
         raise HTTPException(422,'Choose a supported window and dataset')
     clock = demo.CLOCK if value.mode=='demo' else datetime.now(timezone.utc)
     start, earlier = clock-timedelta(hours=value.hours), clock-timedelta(hours=value.hours*2)
     with db.connect() as con:
         if value.mode == 'live':
             rows = x_api.cached_posts(x_api.username(value.username))
+        elif value.mode == 'manual':
+            rows = manual.selected_posts(con)
         else:
             rows = [dict(r) for r in con.execute('SELECT p.* FROM posts p JOIN accounts a ON p.handle=a.handle WHERE a.enabled=1 AND p.provenance=?',
                         ('synthetic' if value.mode=='demo' else 'imported',))]
         current = [p for p in rows if start <= datetime.fromisoformat(p['created_at']) <= clock]
         prior = [p for p in rows if earlier <= datetime.fromisoformat(p['created_at']) < start]
         brand = brief_value(con)
+        sample_warning = None
+        manual_warning = None
+        if value.mode == 'manual':
+            unique_texts = len({re.sub(r'\W+', ' ', p['text'].lower()).strip() for p in current})
+            authors = len({p['handle'] for p in current})
+            if unique_texts < 5 or authors < 2:
+                sample_warning = (f'Too few imported posts for reliable trend analysis: {unique_texts} distinct texts from {authors} accounts in this window. '
+                    'Add at least 5 distinct posts from 2 or more accounts as a starting point; this is a demo heuristic, not a statistical guarantee.')
+            manual_warning = 'Manually entered X posts: source text, dates, authors and metrics are user-supplied and unverified. A hand-selected sample does not establish platform-wide trends.'
         result = dict(id=str(uuid4()), mode=value.mode, clock=clock.isoformat(), hours=value.hours,
             post_count=len(current), account_count=len({p['handle'] for p in current}),
             topics=detect(current,prior,clock,value.hours,brand), brief=brand,
             analyzed_at=datetime.now(timezone.utc).isoformat(),
             source_warning=('This is a cached sample from @'+x_api.username(value.username)+
                 ', not a platform-wide trend. One account cannot establish cross-account momentum. '
-                'Replies, quotes and reposts are labeled; fetched time windows may be incomplete.' if value.mode=='live' else None),
+                'Replies, quotes and reposts are labeled; fetched time windows may be incomplete.' if value.mode=='live' else manual_warning),
+            sample_warning=sample_warning,
             live_status=x_api.status(value.username) if value.mode=='live' else None)
         save(con,'analyses',result)
     return result

@@ -1,6 +1,22 @@
 # Validation — 14 October 2026
 
-## Live X enhancement — latest results
+## Manual X Post Import — latest results
+
+Branch: `feat/manual-x-import`, based on merged main `22f59b6` (includes PRs #1 and #2).
+
+- **77 tests passed, 1 existing dependency deprecation warning**; final full pytest run: 2.29s. This includes all 45 previous tests plus 32 manual-import cases.
+- **Manual browser smoke passed**: form saves from multiple accounts, duplicate rejection without overwriting, unknown versus zero counts, sparse warning, source attribution, three angles, editable draft, human approval, actual text export, persisted posts after reload and 390px mobile layout. Browser external-request interception recorded zero external requests; the X request ledger stayed at zero.
+- **Original MVP browser smoke passed**, preserving Demo, accounts, JSON upload, editing/approval/export, persistence and desktop/mobile behavior.
+- **Mocked Live browser smoke passed**, preserving live mode, cache/error states and content workflow without contacting X.
+- JavaScript syntax and Python compilation passed. All three browser servers started successfully against isolated SQLite databases.
+- Visually reviewed the Manual Imports dashboard and mobile form screenshots. Test post text is explicitly marked TEST INPUT; no sample fixture is presented as fetched real data.
+- No scraping, paid X requests, real LLM requests or publishing occurred. Live enablement and limits were not changed; default remains disabled.
+
+Manual tests cover URL/author validation, canonical duplicate IDs across URL variants and concurrent saves, blank/oversized text, future/naive dates, invalid metrics, nullable and observed-zero metrics, SQLite restart persistence, enabled-account filtering, all four time windows, source-mode isolation, unique-text/account sample warnings, score handling, multiple topics and the review/export workflow.
+
+Limitations: manually entered text/authors/dates/metrics are not verified against X; small-sample thresholds are heuristics; source editing/deletion is not implemented. Publication input is explicitly UTC+08:00. Existing original-source character limits for generated-post export and unverified brand positioning remain. The official API remains an optional future production source requiring approved access/credits, not part of this free import path.
+
+## Live X enhancement — previous results
 
 Branch: `feat/live-x-monitoring`, based on merged main `f13eaec`.
 
