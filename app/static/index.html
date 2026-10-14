@@ -33,7 +33,7 @@
       </header>
       <main>
         <div class="notice">
-          <strong>DEMO WORKSPACE</strong
+          <strong id="mode-label">DEMO WORKSPACE</strong
           ><span id="provenance"
             >Fictional accounts, synthetic posts and engagement. No live X
             connection.</span
@@ -54,7 +54,8 @@
             <div class="field">
               <label for="mode">Data source</label
               ><select id="mode">
-                <option value="demo">Synthetic demo</option>
+                <option value="demo">Demo Data (synthetic)</option>
+                <option value="live">Live X (manual / cached)</option>
                 <option value="imported">Imported posts</option>
               </select>
             </div>
@@ -70,10 +71,57 @@
             <div class="clock" id="clock"></div>
             <button id="analyze" class="primary">✳ Analyze signals</button>
           </div>
+          <article
+            id="live-panel"
+            class="panel live-panel hidden"
+            aria-label="Live X monitoring"
+          >
+            <div class="live-heading">
+              <div>
+                <div class="eyebrow">OFFICIAL X API · ON-DEMAND</div>
+                <h2>Live account monitoring</h2>
+              </div>
+              <span class="tag">NO AUTOMATIC FETCHING</span>
+            </div>
+            <p>
+              One account is a source of content signals, not evidence of a
+              platform-wide trend. Fetching may incur X API costs; analyzing the
+              cache does not.
+            </p>
+            <div class="live-controls">
+              <div class="field">
+                <label for="live-username">Monitored X username</label
+                ><input
+                  id="live-username"
+                  value="elonmusk"
+                  maxlength="15"
+                  pattern="[A-Za-z0-9_]+"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="field">
+                <label for="live-limit">Posts per request</label
+                ><select id="live-limit">
+                  <option value="5">5 posts (default)</option>
+                  <option value="10">10 posts</option>
+                </select>
+              </div>
+              <button id="fetch-x" class="primary">Fetch latest posts</button>
+            </div>
+            <div id="live-status" role="status" aria-live="polite">
+              Inspecting local configuration and cache…
+            </div>
+            <div id="live-facts" class="live-facts"></div>
+            <p class="subtle">
+              15-minute cache · 10-minute global cooldown · 10 outbound requests
+              per UTC day · First fetch usually uses 2 requests (user ID +
+              posts). No pagination or automatic retries.
+            </p>
+          </article>
           <div class="metrics">
             <article>
               <span>Posts in window</span><strong id="posts">—</strong
-              ><small>Filtered to enabled accounts</small>
+              ><small id="posts-scope">Filtered to enabled accounts</small>
             </article>
             <article>
               <span>Active sources</span><strong id="accounts">—</strong

@@ -13,7 +13,7 @@ ROOT=Path(__file__).resolve().parents[1]
 output=Path(os.environ.get('BROWSER_OUTPUT','work/browser'))
 output.mkdir(parents=True,exist_ok=True)
 with tempfile.TemporaryDirectory() as directory:
-    env={**os.environ,'DATABASE_PATH':str(Path(directory)/'browser.db'),'OPENAI_API_KEY':''}
+    env={**os.environ,'DATABASE_PATH':str(Path(directory)/'browser.db'),'OPENAI_API_KEY':'','X_BEARER_TOKEN':'','X_LIVE_ENABLED':'false'}
     server=subprocess.Popen([sys.executable,'-m','uvicorn','app.main:app','--host','127.0.0.1','--port','8001'],cwd=ROOT,env=env,stdout=subprocess.DEVNULL)
     try:
         for _ in range(100):
@@ -31,6 +31,20 @@ with tempfile.TemporaryDirectory() as directory:
             assert int(page.locator('#posts').inner_text())>0
             assert page.locator('.topic').count()>=3
             page.screenshot(path=str(output/'dashboard.png'),full_page=True)
+            external=[]
+            page.on('request',lambda request:external.append(request.url) if request.url.startswith(('https://api.x.com','https://api.twitter.com')) else None)
+            page.locator('#mode').select_option('live')
+            page.wait_for_function("document.getElementById('live-status').textContent.includes('X_BEARER_TOKEN')")
+            page.locator('#fetch-x').click()
+            page.wait_for_function("document.getElementById('live-status').textContent.includes('No X request was made')")
+            page.locator('#analyze').click()
+            page.wait_for_function("document.getElementById('posts').textContent==='0'")
+            assert page.locator('.topic').count()==0
+            assert not external
+            page.screenshot(path=str(output/'live-missing-credentials.png'),full_page=True)
+            page.locator('#mode').select_option('demo')
+            page.locator('#analyze').click()
+            page.locator('.topic').first.wait_for()
             page.locator('#window').select_option('1')
             assert page.locator('.topic').count()==0
             page.locator('#analyze').click()
