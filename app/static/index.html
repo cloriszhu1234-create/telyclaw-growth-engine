@@ -56,7 +56,8 @@
               ><select id="mode">
                 <option value="demo">Demo Data (synthetic)</option>
                 <option value="live">Live X (manual / cached)</option>
-                <option value="imported">Imported posts</option>
+                <option value="manual">Manual Imports</option>
+                <option value="imported">JSON Imports</option>
               </select>
             </div>
             <div class="field">
@@ -118,6 +119,12 @@
               posts). No pagination or automatic retries.
             </p>
           </article>
+          <div
+            id="sample-warning"
+            class="notice sample-warning hidden"
+            role="status"
+            aria-live="polite"
+          ></div>
           <div class="metrics">
             <article>
               <span>Posts in window</span><strong id="posts">—</strong
@@ -217,8 +224,93 @@
                 </button>
               </form>
             </article>
+            <article class="panel manual-panel">
+              <div class="eyebrow">NO API ACCESS NEEDED</div>
+              <h2>Import X Post</h2>
+              <p>
+                Copy a post yourself and save it locally. This form never opens,
+                scrapes or fetches the URL. Source details are user-supplied and
+                unverified.
+              </p>
+              <form id="manual-form">
+                <label for="manual-url">Original X post URL</label>
+                <input
+                  id="manual-url"
+                  type="url"
+                  placeholder="https://x.com/author/status/123456789"
+                  maxlength="2000"
+                  required
+                />
+                <label for="manual-handle">Author’s X handle</label>
+                <input
+                  id="manual-handle"
+                  placeholder="@author"
+                  maxlength="16"
+                  required
+                />
+                <label for="manual-text">Full post text</label>
+                <textarea
+                  id="manual-text"
+                  rows="5"
+                  maxlength="25000"
+                  required
+                  placeholder="Paste the full text, without adding your own commentary"
+                ></textarea>
+                <label for="manual-time"
+                  >Publication date and time (Asia/Shanghai, UTC+08:00)</label
+                >
+                <input id="manual-time" type="datetime-local" required />
+                <div class="manual-metrics">
+                  <div>
+                    <label for="manual-likes">Likes (optional)</label
+                    ><input
+                      id="manual-likes"
+                      type="number"
+                      min="0"
+                      max="100000000000"
+                      step="1"
+                      placeholder="Unknown"
+                    />
+                  </div>
+                  <div>
+                    <label for="manual-reposts">Reposts (optional)</label
+                    ><input
+                      id="manual-reposts"
+                      type="number"
+                      min="0"
+                      max="100000000000"
+                      step="1"
+                      placeholder="Unknown"
+                    />
+                  </div>
+                  <div>
+                    <label for="manual-replies">Replies (optional)</label
+                    ><input
+                      id="manual-replies"
+                      type="number"
+                      min="0"
+                      max="100000000000"
+                      step="1"
+                      placeholder="Unknown"
+                    />
+                  </div>
+                </div>
+                <p class="subtle">
+                  Leave unavailable counts blank; enter 0 only when the post
+                  actually shows zero. Convert the publication time to UTC+08:00
+                  before entering it.
+                </p>
+                <button id="save-manual" class="primary" type="submit">
+                  Save Post
+                </button>
+                <p id="manual-result" role="status" aria-live="polite"></p>
+              </form>
+              <h3>Recent manual imports</h3>
+              <p id="manual-count"></p>
+              <div id="manual-list"></div>
+            </article>
             <article class="panel">
-              <h2>Import posts</h2>
+              <h2>Import posts (JSON)</h2>
               <p>
                 Upload JSON with a <code>posts</code> array. Up to 1,000 posts;
                 timezone-aware dates required. Imported data stays separate from

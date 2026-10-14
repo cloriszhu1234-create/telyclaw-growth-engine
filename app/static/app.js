@@ -38,7 +38,12 @@ async function api(path, method = "GET", body) {
     throw new Error(
       typeof data.detail === "string"
         ? data.detail
-        : data.detail?.message || JSON.stringify(data.detail || data),
+        : data.detail?.message ||
+          (Array.isArray(data.detail)
+            ? data.detail
+                .map((item) => item.loc.slice(1).join(".") + ": " + item.msg)
+                .join("; ")
+            : JSON.stringify(data.detail || data)),
     );
   return data;
 }
@@ -107,6 +112,7 @@ async function refresh() {
   $("import-count").textContent =
     state.imported_posts +
     " imported posts stored. Choose Imported posts on the radar to analyze them.";
+  await refreshManual();
   renderDrafts();
   updateClock();
 }
@@ -115,9 +121,16 @@ function updateClock() {
   $("mode-label").textContent = {
     demo: "DEMO WORKSPACE",
     live: "LIVE X · CACHED DATA",
-    imported: "IMPORTED DATA",
+    imported: "JSON IMPORTS",
+    manual: "MANUAL IMPORTS",
   }[mode];
   $("live-panel").classList.toggle("hidden", mode !== "live");
+  $("sample-warning").classList.toggle("hidden", mode !== "manual");
+  if (mode === "manual")
+    $("sample-warning").textContent =
+      analysis?.mode === "manual"
+        ? analysis.sample_warning || analysis.source_warning
+        : "Manually selected posts form a limited, unverified sample. Analyze to check coverage for the selected time window.";
   $("posts-scope").textContent =
     mode === "live"
       ? "Cached posts for selected username"
@@ -131,6 +144,8 @@ function updateClock() {
     demo: "Fictional accounts, synthetic posts and engagement. No live X connection.",
     imported:
       "User-imported posts. Accuracy is not independently verified. No live X connection.",
+    manual:
+      "Manually entered X posts. Text, timestamps and metrics are unverified. No scraping or API requests.",
     live: "Official X API cache only. No automatic fetch, no synthetic fallback, no platform-wide trend claim.",
   }[mode];
 }
@@ -201,6 +216,7 @@ $("window").onchange = () => {
 };
 function clearAnalysis() {
   analysis = null;
+  updateClock();
   $("topic-list").innerHTML =
     '<div class="empty">Selection changed. Analyze signals to refresh results.</div>';
   $("detail").innerHTML =
@@ -221,6 +237,7 @@ $("analyze").onclick = async () => {
     });
     if (version !== modeVersion) return;
     analysis = result;
+    updateClock();
     $("posts").textContent = analysis.post_count;
     $("accounts").textContent = analysis.account_count;
     $("trends").textContent = analysis.topics.length;
@@ -256,7 +273,7 @@ $("analyze").onclick = async () => {
 };
 function sourceLink(p) {
   // Build links from validated IDs/handles, never an arbitrary imported href.
-  return p.provenance === "live_x" &&
+  return ["live_x", "manual_x"].includes(p.provenance) &&
     /^\d+$/.test(p.x_id || "") &&
     /^[a-z0-9_]{1,15}$/i.test(p.handle)
     ? `https://x.com/${p.handle}/status/${p.x_id}`
@@ -273,7 +290,9 @@ function evidenceHTML(p) {
         ]
           .filter(Boolean)
           .join(" / ")
-      : p.provenance;
+      : p.provenance === "manual_x"
+        ? "Manual · unverified"
+        : p.provenance;
   return `<div class="evidence"><strong>@${e(p.handle)}${p.provenance === "live_x" ? " timeline" : ""}</strong> <span class="tag">${e(flags)}</span><p>${e(p.text)}</p><small>${e(dateLabel(p.created_at))} · ${p.likes ?? "N/A"} likes · ${p.reposts ?? "N/A"} reposts · ${p.replies ?? "N/A"} replies · ${e(p.provenance)}</small>${link ? `<div class="source-links"><a href="${e(link)}" target="_blank" rel="noopener noreferrer">Original X post ↗</a></div>` : ""}</div>`;
 }
 function selectTopic(id) {
@@ -282,7 +301,7 @@ function selectTopic(id) {
     .querySelectorAll(".topic")
     .forEach((b) => b.classList.toggle("selected", b.dataset.topic === id));
   $("detail").innerHTML =
-    `<div class="detail-label">OPPORTUNITY BRIEF · ${analysis.mode === "demo" ? "SYNTHETIC EVIDENCE" : analysis.mode === "live" ? "LIVE X CACHE" : "IMPORTED EVIDENCE"}</div><h2>${e(t.title)}</h2><div class="summary">${e(t.summary)}<br><small class="subtle">${e(t.summary_method)}</small></div><h4>Why this is worth a look</h4><p>${e(t.reason)}</p>${analysis.source_warning ? `<p class="source-warning">${e(analysis.source_warning)}</p>` : ""}<h4>Opportunity score <span class="tag">${t.score} / 100</span></h4>${Object.entries(
+    `<div class="detail-label">OPPORTUNITY BRIEF · ${analysis.mode === "demo" ? "SYNTHETIC EVIDENCE" : analysis.mode === "live" ? "LIVE X CACHE" : analysis.mode === "manual" ? "MANUAL · UNVERIFIED" : "JSON IMPORTS"}</div><h2>${e(t.title)}</h2><div class="summary">${e(t.summary)}<br><small class="subtle">${e(t.summary_method)}</small></div><h4>Why this is worth a look</h4><p>${e(t.reason)}</p>${analysis.source_warning ? `<p class="source-warning">${e(analysis.source_warning)}</p>` : ""}<h4>Opportunity score <span class="tag">${t.score} / 100</span></h4>${Object.entries(
       t.factors,
     )
       .map(
@@ -319,7 +338,7 @@ function renderDrafts() {
     state.drafts
       .map(
         (d) =>
-          `<button class="draft-card" data-draft="${e(d.id)}"><span class="status ${d.status}">${e(d.status)}</span><strong>${e(d.topic_title)}</strong><small class="subtle">${d.mode === "demo" ? "Synthetic signal" : d.mode === "live" ? "Live X signal" : "Imported signal"} · ${e(dateLabel(d.created_at))}</small></button>`,
+          `<button class="draft-card" data-draft="${e(d.id)}"><span class="status ${d.status}">${e(d.status)}</span><strong>${e(d.topic_title)}</strong><small class="subtle">${d.mode === "demo" ? "Synthetic signal" : d.mode === "live" ? "Live X signal" : d.mode === "manual" ? "Manual X signal" : "Imported signal"} · ${e(dateLabel(d.created_at))}</small></button>`,
       )
       .join("") ||
     '<div class="empty">No drafts yet. Start with the trend radar.</div>';
@@ -344,7 +363,7 @@ function renderEditor() {
     )
       .filter(
         (p) =>
-          p.provenance === "live_x" &&
+          ["live_x", "manual_x"].includes(p.provenance) &&
           /^https:\/\/x\.com\/[a-z0-9_]+\/status\/\d+$/i.test(p.url || ""),
       )
       .map(
@@ -392,6 +411,50 @@ async function saveDraft(approve) {
     }
   }
 }
+async function refreshManual() {
+  const data = await api("manual/posts");
+  $("manual-count").textContent =
+    `${data.total} saved posts. Showing the latest ${data.posts.length}. Select Manual Imports on the radar to analyze enabled accounts.`;
+  $("manual-list").innerHTML =
+    data.posts.map(evidenceHTML).join("") ||
+    "<p>No manual posts yet. Add posts from different accounts to compare topics.</p>";
+}
+$("manual-form").onsubmit = async (event) => {
+  event.preventDefault();
+  $("save-manual").disabled = true;
+  $("manual-result").textContent = "Saving locally…";
+  $("manual-result").className = "";
+  try {
+    const metric = (id) => ($(id).value === "" ? null : Number($(id).value));
+    const result = await api("manual/posts", "POST", {
+      url: $("manual-url").value,
+      handle: $("manual-handle").value,
+      text: $("manual-text").value,
+      created_at: new Date($("manual-time").value + "+08:00").toISOString(),
+      likes: metric("manual-likes"),
+      reposts: metric("manual-reposts"),
+      replies: metric("manual-replies"),
+    });
+    [
+      "manual-url",
+      "manual-text",
+      "manual-time",
+      "manual-likes",
+      "manual-reposts",
+      "manual-replies",
+    ].forEach((id) => ($(id).value = ""));
+    modeVersion++;
+    clearAnalysis();
+    await refresh();
+    $("manual-result").textContent = result.message;
+    toast(result.message);
+  } catch (err) {
+    $("manual-result").textContent = err.message;
+    $("manual-result").className = "error";
+  } finally {
+    $("save-manual").disabled = false;
+  }
+};
 $("add-account").onsubmit = async (event) => {
   event.preventDefault();
   try {
