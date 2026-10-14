@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TelyClaw · Growth Engine</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="logo" href="/">tely<span>claw</span><i>✳</i></a>
+      <div class="workspace">GROWTH WORKSPACE</div>
+      <nav>
+        <button class="nav active" data-tab="opportunities">
+          ◈ <span>Opportunities</span></button
+        ><button class="nav" data-tab="review">
+          ▤ <span>Content studio</span><b id="draft-count">0</b></button
+        ><button class="nav" data-tab="sources">
+          ◎ <span>Sources & settings</span>
+        </button>
+      </nav>
+      <div class="side-bottom">
+        <div class="avatar">GL</div>
+        <div>Growth Lead<small>Candidate workspace</small></div>
+      </div>
+    </aside>
+    <div class="shell">
+      <header>
+        <span
+          >Workspace <span class="crumb">/</span>
+          <strong id="page-name">Opportunities</strong></span
+        ><span class="pill"><i></i> Local workspace</span>
+      </header>
+      <main>
+        <div class="notice">
+          <strong>DEMO WORKSPACE</strong
+          ><span id="provenance"
+            >Fictional accounts, synthetic posts and engagement. No live X
+            connection.</span
+          ><a href="/docs" target="_blank" rel="noopener">API docs ↗</a>
+        </div>
+        <section id="opportunities" class="view">
+          <div class="heading">
+            <div>
+              <div class="eyebrow">LISTEN. FIND THE ANGLE. GROW.</div>
+              <h1>Turn signals into your next move.</h1>
+              <p>
+                Discover the conversations worth joining — and give them a
+                TelyClaw perspective.
+              </p>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="field">
+              <label for="mode">Data source</label
+              ><select id="mode">
+                <option value="demo">Synthetic demo</option>
+                <option value="imported">Imported posts</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="window">Monitoring window</label
+              ><select id="window">
+                <option value="1">Last 1 hour</option>
+                <option value="4" selected>Last 4 hours</option>
+                <option value="24">Last 24 hours</option>
+                <option value="168">Last 7 days</option>
+              </select>
+            </div>
+            <div class="clock" id="clock"></div>
+            <button id="analyze" class="primary">✳ Analyze signals</button>
+          </div>
+          <div class="metrics">
+            <article>
+              <span>Posts in window</span><strong id="posts">—</strong
+              ><small>Filtered to enabled accounts</small>
+            </article>
+            <article>
+              <span>Active sources</span><strong id="accounts">—</strong
+              ><small>Distinct accounts in this run</small>
+            </article>
+            <article>
+              <span>Detected opportunities</span><strong id="trends">—</strong
+              ><small>Evidence-backed topic clusters</small>
+            </article>
+            <article class="north">
+              <span>Qualified engagement / post</span
+              ><strong class="unmeasured">Not measured</strong
+              ><small>Requires published-post analytics</small>
+            </article>
+          </div>
+          <div class="section-title">
+            <div>
+              <h2>Trend radar <span class="tag">TOP OPPORTUNITIES</span></h2>
+              <p>Ranked by relevance, signal strength and timing.</p>
+            </div>
+            <span class="subtle" id="run-status">Ready to analyze</span>
+          </div>
+          <div class="radar-layout">
+            <div id="topic-list" class="topic-list">
+              <div class="empty">
+                Analyze signals to discover opportunities.
+              </div>
+            </div>
+            <article class="panel detail" id="detail">
+              <div class="empty">
+                Select a trend to inspect its evidence and score.
+              </div>
+            </article>
+          </div>
+          <div class="footnote">
+            Local statistical NLP · Transparent scoring · Human judgment at
+            every publishing decision
+          </div>
+        </section>
+        <section id="review" class="view hidden">
+          <div class="heading">
+            <div class="eyebrow">FROM OPPORTUNITY TO ORIGINAL CONTENT</div>
+            <h1>Content studio</h1>
+            <p>Shape the idea. Check the claims. Approve when it’s ready.</p>
+          </div>
+          <div class="review-layout">
+            <div id="draft-list" class="draft-list"></div>
+            <article class="panel" id="editor">
+              <div class="empty">Generate a draft from a trend to begin.</div>
+            </article>
+          </div>
+        </section>
+        <section id="sources" class="view hidden">
+          <div class="heading">
+            <div class="eyebrow">BETTER INPUTS, BETTER OPPORTUNITIES</div>
+            <h1>Sources & settings</h1>
+            <p>Curate your listening list and make relevance explicit.</p>
+          </div>
+          <div class="settings-grid">
+            <article class="panel">
+              <h2>Monitored accounts</h2>
+              <p>
+                Demo handles are fictional. Imported accounts are added
+                automatically.
+              </p>
+              <form id="add-account" class="inline">
+                <label class="sr-only" for="handle">X handle without @</label
+                ><input
+                  id="handle"
+                  placeholder="X handle without @"
+                  maxlength="15"
+                  required
+                  pattern="[A-Za-z0-9_]+"
+                /><button class="primary">Add account</button>
+              </form>
+              <div id="account-list"></div>
+            </article>
+            <article class="panel">
+              <h2>Brand brief</h2>
+              <p>
+                Provisional until TelyClaw confirms its positioning. Changes
+                apply to new analyses.
+              </p>
+              <form id="brief-form">
+                <label for="positioning"
+                  >Positioning & editorial guardrails</label
+                ><textarea id="positioning" rows="4" required></textarea
+                ><label for="audience">Audience</label
+                ><input id="audience" required /><label for="keywords"
+                  >Relevance keywords (comma separated)</label
+                ><input id="keywords" required /><button class="primary">
+                  Save brand brief
+                </button>
+              </form>
+            </article>
+            <article class="panel">
+              <h2>Import posts</h2>
+              <p>
+                Upload JSON with a <code>posts</code> array. Up to 1,000 posts;
+                timezone-aware dates required. Imported data stays separate from
+                synthetic data.
+              </p>
+              <label for="import-file">Choose JSON file</label
+              ><input
+                type="file"
+                id="import-file"
+                accept="application/json,.json"
+              /><button id="import" class="secondary">Import dataset</button>
+              <p id="import-count"></p>
+              <details>
+                <summary>View import format</summary>
+                <pre>
+{"posts": [{
+ "id": "unique-post-id",
+ "handle": "your_account",
+ "text": "Source post text",
+ "created_at": "2026-10-14T08:00:00Z",
+ "likes": 12, "reposts": 3, "replies": 2
+}]}</pre
+                >
+              </details>
+            </article>
+            <article class="panel growth">
+              <div class="eyebrow">THE GROWTH LOOP</div>
+              <h2>Optimize for useful attention.</h2>
+              <p>Trends → Content → Attention → Engagement → Growth</p>
+              <p>
+                The North Star is
+                <strong>Qualified Engagement Generated from Trends</strong>:
+                meaningful replies, reposts, bookmarks, profile visits,
+                qualified followers and product clicks.
+              </p>
+              <p>
+                Use tagged links and a consistent measurement window after
+                manual publishing. Source-post likes are signals, not results
+                from your content.
+              </p>
+              <div class="tag">PAGE 7: PENDING RECRUITER CLARIFICATION</div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
