@@ -99,6 +99,43 @@ Use recent actual timestamps for a current-window demonstration. Uploads accept 
 
 Demo data uses a visible fixed **14 Oct 2026, 10:00 UTC** scenario clock; imports use the actual current time. UI dates display Asia/Shanghai (CST). Data modes never mix. Imported data is user-supplied and unverified; importing is not proof of a live integration. Live X uses current time and only the selected account’s cached posts. No synthetic outcomes are attributed to generated content.
 
+## Manual X Post Import — no API fees
+
+Use this path when you do not want to pay for X API access. You open X yourself and copy the information; the app never scrapes, opens or fetches a pasted URL. No token or X credits are needed.
+
+1. Open **Sources & Settings → Import X Post**.
+2. Paste the original HTTPS post URL, the author's handle (with or without `@`), and full post text.
+3. Enter its publication date/time in **Asia/Shanghai (UTC+08:00)** as labeled. Convert from the timezone shown by X if necessary. The app stores UTC. Future or timezone-less API timestamps are rejected.
+4. Optionally enter likes, reposts and replies as whole numbers. **Blank means unknown (`N/A`); 0 means observed zero.** Missing metrics are never invented, and the existing score excludes unavailable engagement factors and rescales remaining weights.
+5. Click **Save Post**. Add more posts one by one, including posts from different accounts. Handles are added to the existing monitored-account list; an already disabled handle stays disabled.
+6. In **Opportunities**, select **Manual Imports**, choose **Last 1H / 4H / 24H / 7D**, then **Analyze signals**. Filtering uses publication time, not the time you saved the post. Enable its author in Sources & Settings if a saved post does not appear.
+7. Inspect source links, representative-source summaries and score factors. Generate three angles and a draft, edit it, approve it and export text through the unchanged workflow.
+
+Supported links have the form `https://x.com/author/status/123456789`; common `twitter.com`, `www.x.com`, `www.twitter.com` and `mobile.twitter.com` variants are accepted. Tracking parameters/fragments are stripped and links are saved canonically under x.com. The URL's author must match the entered handle. Shortened links and `/i/status/` links are not accepted because they do not contain a checkable author handle; open the post yourself and copy its author-based URL instead. Structural validation does **not** prove the post exists or that the copied details are accurate.
+
+Duplicate checks use the numeric X post ID, even across hostname, tracking-parameter or author-case variants. A duplicate returns a clear message and **does not overwrite** the saved text/metrics. Concurrent duplicate saves are also prevented. There is no source-edit/delete feature in this release; check the fields before saving. Text supports up to 25,000 characters, and optional metrics must be integers from 0 to 100 billion.
+
+The latest 20 manual posts are displayed under the form for verification; all saved posts remain in SQLite and are eligible for analysis if their account is enabled and publication time is in the selected window. Existing posts, drafts, API counters and settings survive this additive database upgrade. Keep your `data/growth.db` when updating.
+
+**Small-sample warning:** fewer than five distinct post texts or fewer than two authors in the selected window triggers a visible warning. Analysis still works so you can demonstrate the full workflow. This threshold is a practical demo heuristic, not statistical proof of a trend. Even larger manually selected samples may be biased or incomplete; all Manual Imports analyses and drafts label the source data as user-supplied and unverified.
+
+| Dashboard mode | Source | Automatic X access? |
+|---|---|---|
+| Demo Data | Existing synthetic fixtures; fixed scenario clock | No |
+| Manual Imports | Posts you copy into the form; current-time windows | No |
+| JSON Imports | Existing bulk JSON uploads; current-time windows | No |
+| Live X | Separate official API cache; current-time windows | No; explicit enablement and manual fetch required |
+
+No mode silently substitutes another dataset. The same post may intentionally exist in different source modes; uniqueness is enforced within Manual Imports. Live X remains disabled by default. Keep `X_LIVE_ENABLED=false` while using this free manual workflow.
+
+### Reviewing this enhancement locally
+
+Download branch **feat/manual-x-import** as a ZIP from GitHub, or switch an existing checkout to that branch. Stop the old server with Control+C, install `requirements.txt` in your existing virtual environment and restart using the **Run locally** commands. No new dependency was introduced for the manual feature.
+
+### Production monitoring later
+
+The existing official X API adapter could replace manual copying once access and costs are approved: resolve account IDs, retrieve normalized posts and preserve source links/metrics. The current implementation is manual on-demand fetching with caching and caps—not streaming or complete historical coverage. Scheduled ingestion, pagination/checkpoints, retention/deletion handling and broad multi-account coverage would need further work and review of current X access/pricing. Manual records stay separately labeled rather than being presented as API-verified data. None of this is required for today's no-fee workflow.
+
 ## Live X monitoring: macOS setup and safe operation
 
 This feature is **on-demand fetching, not streaming**. You can inspect Live mode with **$0 credits**: it will explain missing credentials or disabled fetching without contacting X. Demo remains the default on every page load. Changing modes, inspecting status, analyzing a cache, generating drafts, approving and exporting never trigger an X request.
@@ -107,13 +144,13 @@ To update an existing checkout on your Mac, open Terminal in the project folder:
 
 ```sh
 git fetch origin
-git switch feat/live-x-monitoring
-git pull --ff-only origin feat/live-x-monitoring
+git switch feat/manual-x-import
+git pull --ff-only origin feat/manual-x-import
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Stop an older server with Control+C first. For a fresh download, select branch **feat/live-x-monitoring** on GitHub, choose Code → Download ZIP, extract it, and follow **Run locally** above. No Git installation is needed for the ZIP option. Open http://localhost:8000 in Safari/Chrome. Leave Terminal open while reviewing the app.
+Stop an older server with Control+C first. For a fresh download, select branch **feat/manual-x-import** on GitHub, choose Code → Download ZIP, extract it, and follow **Run locally** above. No Git installation is needed for the ZIP option. Open http://localhost:8000 in Safari/Chrome. Leave Terminal open while reviewing the app.
 
 ### Private environment configuration
 
@@ -192,10 +229,11 @@ python -m pytest -q
 # Or set CHROMIUM_PATH to your installed executable.
 python tests/browser_smoke.py
 python tests/live_browser_smoke.py
+python tests/manual_browser_smoke.py
 node --check app/static/app.js
 ```
 
-The original browser test uses a temporary database on port 8001; the Live test uses port 8002 and an in-process MockTransport. Both save screenshots under `work/browser/`. Tests default-deny X traffic and blank real service keys; the Live suite uses non-secret placeholders, never actual credentials. Node is only needed for the optional JavaScript syntax check, not to run the app.
+The original browser test uses a temporary database on port 8001; the Live test uses port 8002 and an in-process MockTransport. The manual-form browser test uses port 8003 and blocks non-local browser requests. All three save screenshots under `work/browser/`. Tests default-deny X traffic and blank real service keys; the Live suite uses non-secret placeholders, never actual credentials. Node is only needed for the optional JavaScript syntax check, not to run the app.
 
 ## Current limitations and submission status
 
