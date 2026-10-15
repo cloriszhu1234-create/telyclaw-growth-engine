@@ -42,7 +42,7 @@ def run():
                 discussions=[
                     'A coding agent needs error feedback to recover from failed changes.',
                     'A programming agent should troubleshoot failures with tests and verification.',
-                    'A coding assistant needs context compression for better token efficiency.',
+                    'A coding assistant filters tool output from context and retains session memory after compaction.',
                     'A coding agent harness can execute complex software engineering tasks.',
                 ]
                 for i,text in enumerate(discussions):
@@ -59,6 +59,8 @@ def run():
                 assert '所选 4 条帖子中，4 条' in narrative.inner_text()
                 assert '不代表行业共识或讨论量正在加速' in narrative.inner_text()
                 assert all('@quality_'+str(i) in narrative.inner_text() for i in range(4))
+                assert '上下文与 Token 效率' in narrative.inner_text()
+                assert 'compaction, tool output' in page.locator('#detail details').first.text_content()
                 assert '历史数据不足' in page.locator('.topic').first.inner_text()
                 page.locator('[data-language="en"]').click()
                 assert '4 of 4 selected posts' in narrative.inner_text()
