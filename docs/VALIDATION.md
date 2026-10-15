@@ -1,6 +1,18 @@
 # Validation — 15 October 2026
 
-## Growth Intelligence and Content Execution — latest results
+## Semantic topics and bilingual interface — latest results
+
+Branch: `feat/semantic-topics-bilingual-ui`, based on merged main `405ee72` (PRs #1–#4).
+
+- **106 pytest tests passed, one existing FastAPI TestClient dependency deprecation warning**. Baseline before editing: 96 passing tests. Ten new semantic tests cover paraphrases across five AI themes, generic-term non-merges, conflicting concrete concerns under a broad multi-agent label, case-insensitive account breadth, unknown metrics, evidence-driven cluster counts/order, and specific editorial fit.
+- Five browser scripts passed: original MVP, Manual Imports, mocked Live X, growth loop and bilingual workflow. All use isolated temporary databases. Chinese defaults, English round-trip persistence, untranslated source text (including a source literally equal to a UI key), preserved unsaved draft/import/publishing/metric values, duplicate error localization, human approval, export, encoded composer destination, publication and cumulative metrics are exercised.
+- Chinese desktop screenshots were inspected across all four pages; English desktop/mobile regressions remain covered. No horizontal page overflow or browser JavaScript errors in the completed runs. Syntax checks for all three JavaScript files, Python compilation and Git whitespace checks pass.
+- No schema changes or database migration; no existing source, draft, analysis, publication or measurement rows are rewritten. Language choice is browser-only. Existing SQLite restart/preservation tests pass.
+- Original X text, author handles, URLs, configured brand brief, generated angle ideas and draft/publication text are intentionally not translated. Domain labels and UI narratives are presentation translations. Unknown-domain keywords and developer API docs can remain English.
+
+No real X/LLM requests, paid credits, billing actions or automatic/public publishing. The user's private ten-post dataset is not present: actual improvement on those posts must be reviewed locally with a fresh analysis. The local vocabulary is an explainable heuristic, not embeddings, LLM clustering, statistical independence or platform-wide trend proof. Recruitment clarification/video remain outstanding.
+
+## Growth Intelligence and Content Execution — previous results
 
 Branch: `feat/growth-intelligence-loop`, based on merged main `920bfb8` (includes PRs #1–#3).
 
