@@ -1,10 +1,10 @@
 # TelyClaw Growth Engine
 
-A runnable, single-user social listening and content opportunity MVP for the TelyClaw Growth Lead challenge. It takes selected account posts through topic detection, explainable ranking, content angles, human editing, approval and text export.
+A runnable, single-user social listening and content opportunity MVP for the TelyClaw Growth Lead challenge. It takes selected account posts through topic detection, explainable ranking, content angles, human editing, approval, manual publication and measured outcomes.
 
 **Status: functional Demo MVP with an optional on-demand Live X adapter, not a completed hiring submission.** Page 7's obscured README line is **Pending recruiter clarification**. The final video must still be recorded. Product positioning needs confirmation.
 
-**Data honesty:** Demo Mode uses six fictional accounts and 48 synthetic posts with synthetic source engagement. Optional Live X mode uses only officially fetched, cached X data; it is disabled by default and has not been exercised against real X in development. There is no automated publishing or measured growth. Local topic detection uses machine learning; default draft generation uses clearly labeled editorial templates, **not an LLM**. An optional OpenAI adapter exists but has not been verified against the real API.
+**Data honesty:** Demo Mode uses six fictional accounts and 48 synthetic posts with synthetic source engagement. Optional Live X mode uses only officially fetched, cached X data; it is disabled by default and has not been exercised against real X in development. There is no automated publishing or bundled growth result. Performance records contain only the publication confirmations and metric snapshots you manually enter. Local topic detection uses machine learning; default draft generation uses clearly labeled editorial templates, **not an LLM**. An optional OpenAI adapter exists but has not been verified against the real API.
 
 ## Run locally
 
@@ -25,12 +25,13 @@ Open **http://localhost:8000**. No API keys, Docker, frontend build or database 
 
 1. Open **Sources & settings**. Inspect six fictional handles; add/remove accounts or toggle monitoring.
 2. In **Opportunities**, keep **Demo Data (synthetic)**, choose **Last 4 hours**, and analyze. Change to **Last 1 hour** and reanalyze to show genuinely filtered data.
-3. Select a ranked trend. Inspect score factors, keyword matches, distinct authors, representative-source summary and source-post evidence. Off-topic football remains visible with a low-relevance flag, outside the top recommendations.
+3. Select a ranked trend. Inspect score factors, keyword matches, distinct authors, multi-document summary and source-post evidence. Off-topic football remains visible with a low-relevance flag, outside the top recommendations.
 4. Choose **Create angles & draft**. The studio shows Opinion, Educational and Product angles plus a suggested X post.
 5. Edit the post, save and approve. Only approved text can be exported. Changing it revokes approval. Export is a text download for manual publishing, never a claim that an X post was published.
-6. Reload to demonstrate persistence. Qualified engagement remains **Not measured** because generated content has not been published or measured.
+6. Use **Open in X** to prepare the approved text in the composer; confirm publication yourself on X. Return, enter the actual URL/time and **Mark as Published**.
+7. In **Performance**, enter real cumulative metric totals. Update them later; only the latest snapshot per post contributes to aggregates. Qualified engagement remains **Not measured** unless qualification is separately established—ordinary interactions are not automatically qualified engagement.
 
-See [the 3–5 minute video script](docs/DEMO.md), [full Phase 1 plan and page-referenced checklist](docs/PHASE1.md), and [validation report](docs/VALIDATION.md).
+See [the full growth-loop walkthrough](docs/PRODUCT_DEMO.md), [the 3–5 minute video script](docs/DEMO.md), [full Phase 1 plan and page-referenced checklist](docs/PHASE1.md), and [validation report](docs/VALIDATION.md).
 
 ## Architecture and product logic
 
@@ -44,36 +45,74 @@ SQLite persistence      scikit-learn local NLP
                      Local templates or optional OpenAI
 ```
 
-`app/x_api.py` owns official on-demand X fetching, normalization, caching and persistent spending safeguards; `app/db.py` owns SQLite initialization; `demo.py` owns fictional fixtures; `trends.py` owns detection/ranking; `content.py` owns replaceable draft generation; `main.py` validates data and controls workflow; `app/static/` contains the responsive dashboard. Tests use separate temporary databases.
+`app/publishing.py` owns manual publication, composer intents and performance calculations; `app/static/performance.js` owns the Performance UI; `app/x_api.py` owns official on-demand X fetching, normalization, caching and persistent spending safeguards; `app/db.py` owns SQLite initialization; `demo.py` owns fictional fixtures; `trends.py` owns detection/ranking; `content.py` owns replaceable draft generation; `main.py` validates data and controls workflow; `app/static/` contains the responsive dashboard. Tests use separate temporary databases.
 
 Accounts, posts, analysis evidence snapshots, brand settings and drafts are persisted. Exact duplicates are removed during topic analysis, not from the stored raw dataset. An analysis stores its original brief and data context so later configuration changes do not silently rewrite an existing draft's rationale. Editing approved draft text clears its approval.
 
-## Detection and opportunity scoring
+## Topic discovery and evidence summaries
 
-TF-IDF turns words/phrases into numerical features; agglomerative cosine-similarity clustering groups related posts across accounts. Topics receive keyword-based titles and an **extractive summary** taken from the most representative source post. Summaries are not independently verified facts. Empty/stopword-only input safely returns no topics.
+No API key or downloaded model is required. The local method normalizes general vocabulary equivalents (for example coordination/orchestration and programming/coding), removes URLs/handles and generic stop words, and applies light morphology. It combines **80% word/phrase TF-IDF cosine similarity with 20% character n-gram similarity**. A pair must share at least two content concepts. Average-link agglomerative clustering merges at distance 0.80 (similarity 0.20), balancing related wording with singleton preservation.
 
-Each factor is 0–100. The final score is the weighted sum:
+These are general normalization rules, not hard-coded topic names or assignments for your sample. Names come from salient non-overlapping phrases in each cluster. Every supporting document contributes to theme extraction; summary excerpts are ordered by centrality to the full cluster centroid. The local summary reports the source count/author count and up to three attributed source excerpts, with all remaining source discussions available below. This is **multi-document extractive synthesis**, not a neural semantic model or fact verification. English synonyms absent from the vocabulary can still split a topic; broad shared language can merge distinct debates. Review evidence rather than treating a cluster as proven consensus.
 
-| Factor | Weight | Definition |
+Exact normalized-text duplicates are removed conservatively before analysis. Supporting post/account counts therefore describe the deduplicated evidence, not all raw eligible rows. The dashboard displays available source engagement (observed likes + reposts + replies), marks incomplete counts and retains original URLs/timestamps/text. Missing values are never invented.
+
+### Historical evidence and momentum
+
+**Insufficient historical data** is the default. There is no neutral positive momentum score. A prior match requires cosine similarity ≥0.25 plus two shared content concepts. To show observed sample velocity, both equal-duration windows need at least three distinct matched posts, at least two authors, and a timestamp spread of at least 25% of the window. Only then is change calculated as `(current count − prior count) / prior count × 100` and labeled rising or flat/falling **in the observed sample**.
+
+Even sufficient counts do not establish complete platform coverage, causation or statistically reliable platform growth. Manual/JSON samples may be selected unevenly; the Live adapter retrieves just one page. Those limitations remain visible. Publication timestamps are actual evidence; historical baselines and growth percentages are not synthesized.
+
+### Topic opportunity ranking
+
+The base weights follow the challenge-oriented recommendations:
+
+| Factor | Base weight | Observed input / heuristic |
 |---|---:|---|
-| Relevance | 30% | Number of matched brand keywords × 25, capped at 100 |
-| Independent accounts | 20% | Distinct authors after exact-text deduplication / 5, capped |
-| Engagement | 15% | Log-scaled source likes + 2×reposts + 2×replies, cap at reference 2,000 |
-| Freshness | 15% | Time since newest evidence relative to selected window |
-| Momentum | 10% | Current unique-post count vs matching prior equal-window count; neutral 50 when no prior matches |
-| Evidence depth | 10% | Unique posts / 5, capped; a content-opportunity proxy |
+| TelyClaw relevance | 30% | Configured brand keyword matches, capped at four; an editorial heuristic |
+| Momentum | 25% | Observed count change when the evidence checks above pass; factor = clamp(change / 2, 0, 100) |
+| Engagement quality | 15% | Log-scaled mean source engagement, damped by `min(1, independent authors / 3)` so a single viral source is not treated as broad confirmation |
+| Independent accounts | 15% | Distinct deduplicated authors / 5, capped at 100 |
+| Content opportunity | 10% | Evidence depth proxy: 20 × unique posts + 10 × (authors − 1), capped at 100 |
+| Freshness | 5% | Age of newest source relative to the selected window, bounded 0–100 |
 
-Momentum uses prior-window similarity ≥0.22 to the current topic centroid; clustering distance threshold is 0.78. Prior/current text is deduplicated. With a baseline, momentum factor = clamp(50 + percentage change / 4, 0, 100). Without one, growth is shown as unknown, never infinity. These are demo heuristics, not calibrated forecasts.
+Unknown momentum or incomplete likes/reposts/replies receive **no factor value and zero effective weight**. Remaining weights are rescaled to total 100%; the UI displays these effective weights and explains the missing inputs. A known zero remains zero. Partial available engagement totals are still shown as partial, but are not used as if complete in scoring. Scores with different coverage need judgment.
 
-The top three are relevance-gated: a topic with no brand keyword match cannot enter recommendations, even if it has high raw engagement. Remaining topics stay inspectable. Scores explain prioritization; they do not predict conversions. Brand keywords and positioning are editable. Actual TelyClaw capabilities and ICP were not provided, so the default brief is explicitly provisional.
+Up to three relevance-gated clusters are highlighted; the app never invents a third opportunity when fewer relevant topics exist. Every topic has **Why It’s Trending** (observed support and limits), **Why TelyClaw Should Care** (connection to the configurable audience/positioning), and **Recommended Content Move** (a source-based comparison and test). These are editorial hypotheses, not verified product claims. The default brief is explicitly provisional because the assignment did not provide authoritative product capabilities or ICP. Confirm and edit it in Sources & Settings.
 
-## Content generation and review
+## Trend-specific generation and human review
 
-Offline generation produces three differentiated angle suggestions and one original editorial draft. It adds a customer question, human judgment and qualified-engagement perspective rather than copying the source post. These local templates are reliable but repetitive; editorial quality and actual product fit require human review.
+Local drafting is labeled **Local editorial templates (evidence-conditioned, no LLM)**. It derives a subject and contrasting phrases from the selected cluster and uses attributed source discussion points to create Opinion, Educational and Product angles. The suggested post adds a TelyClaw editorial test and actionable buyer task, rather than copying a source. The fallback is deterministic and still uses template structure; it is not falsely labeled LLM-generated or equivalent to an expert editor.
 
-Optional generative AI: set `OPENAI_API_KEY` in your server environment and optionally `OPENAI_MODEL` (default `gpt-4o-mini`), then restart. The server calls OpenAI's chat completions endpoint with the topic evidence and brand brief, validates structured output and labels the provider on the draft. A configured-provider failure is explicit; it never silently masquerades as a successful LLM call. Source text is treated as untrusted evidence in the prompt. Network access and billing must be configured outside the app. **Real OpenAI calls are untested in this environment.** Never commit keys or put them in browser code.
+An optional OpenAI adapter remains available via `OPENAI_API_KEY` and `OPENAI_MODEL` (default `gpt-4o-mini`). It receives the configured brief, source evidence and recommended content move. Its output is labeled **OpenAI LLM**, requires three named angle categories, and rejects invalid length/format or a substantial verbatim source passage. Provider failures are explicit; they never silently claim a successful LLM call. Development tests mock this provider; real LLM access remains unverified.
 
-Approval/export currently supports **1–280 ASCII characters without URLs**. This deliberately avoids claiming full X weighted-character counting or URL handling. Unicode or URL drafts need editing before approval. Approval is a local single-user action, not an authenticated team audit workflow.
+Human review is mandatory. Editing an approved draft revokes approval and hides publishing controls until approval again. The conservative export policy remains **1–280 ASCII characters without URLs**. This is a safe subset of standard X constraints, not a full implementation of X's Unicode/URL weighted counting or longer paid-account posts. Unsupported drafts must be edited before approval. Source posts themselves can contain Unicode and URLs.
+
+## Manual publishing and Performance
+
+1. Approve a saved draft. **Export approved text** remains a TXT download.
+2. **Open in X** redirects to an encoded official web intent (`https://twitter.com/intent/tweet?text=…`). It only prefills the composer; the user reviews/confirms in X. Opening it does not create a publication record or claim success.
+3. After actually publishing yourself, enter the real HTTPS X URL and timezone-labeled publication time, then **Mark as Published**. Structural URL validation and numeric-ID uniqueness prevent accidental duplicate records; the app does not verify the post against X.
+4. The publication preserves an immutable snapshot of approved text, source mode, draft and topic. Published text stays TXT-exportable but is locked against rewriting. **Create revision** makes a new unapproved draft while preserving publication history.
+5. Open **Performance** and enter real observed cumulative metrics, plus measurement time. No simulated outcomes are supplied. Before any publication, the page explains the next step and shows **Not measured**.
+
+### Metric definitions
+
+- **Measured engagement** = available likes + reposts + replies + bookmarks. All four unknown means **Not measured**, not zero. Partial totals are labeled partial. These interactions are not automatically *qualified* engagement.
+- **Per-post engagement rate** = available measured engagement / positive impressions × 100. Unknown or zero impressions means rate **Not measured**. The numerator may be partial; that limitation is displayed.
+- **Aggregate/topic engagement rate** uses only posts having both positive impressions and some measured engagement. It divides the sum of their latest engagement counts by the sum of their impressions; the UI shows the number of paired posts. Other measured engagement is included in total engagement but not a rate with a mismatched denominator.
+- Link clicks, profile visits and post-attributed followers are stored as **separate outcomes**, not added again to engagement. Aggregate coverage says how many posts have each metric.
+- Followers directly attributed to a post require a note describing reliable post-level attribution evidence, even for zero. Leave blank without such evidence. An account's follower-count increase is **not** a post-attributed follower count. This is user-declared evidence, not API verification.
+- Every update is a complete cumulative snapshot: blank fields mean unavailable, not “keep previous value.” The form prefills existing values for convenience. Snapshots remain in history; only the latest per published post is aggregated, avoiding double-counting. Measurements cannot precede publication, be future-dated, or replace a newer measurement with an older timestamp.
+- Topic rollups use the immutable inferred topic key/title from the generating analysis (legacy drafts fall back to a title-derived key). Similar discussions with different inferred names can appear separately; there is no automatic cross-analysis taxonomy reconciliation.
+
+Learn by reviewing topics after consistent measurement windows, checking audience quality, and recording what to change in your next editorial experiment. Comparisons are observational, not causal lift or a guarantee of growth. Automatic learning from outcomes and account-level follower analytics are not implemented.
+
+### Database upgrade and data preservation
+
+Startup idempotently adds **`publications`** (unique draft and X post ID) and **`measurements`** (publication snapshots) plus an index. No imported post, existing account, draft, saved analysis, Live cache or API-budget record is deleted or rewritten by this migration. Old analyses remain snapshots of the earlier method; **run Analyze signals again** to use the new detector. Drafts made from old analyses still work.
+
+Keep `data/growth.db` and your private `.env` when updating. Stop the old server first and make a private local backup of the database. With a ZIP download, copy your existing `data/` directory into the newly extracted project **before starting it** so your manually entered posts remain available. Do not upload databases or secrets to GitHub.
 
 ## Import real or sample posts
 
@@ -109,7 +148,7 @@ Use this path when you do not want to pay for X API access. You open X yourself 
 4. Optionally enter likes, reposts and replies as whole numbers. **Blank means unknown (`N/A`); 0 means observed zero.** Missing metrics are never invented, and the existing score excludes unavailable engagement factors and rescales remaining weights.
 5. Click **Save Post**. Add more posts one by one, including posts from different accounts. Handles are added to the existing monitored-account list; an already disabled handle stays disabled.
 6. In **Opportunities**, select **Manual Imports**, choose **Last 1H / 4H / 24H / 7D**, then **Analyze signals**. Filtering uses publication time, not the time you saved the post. Enable its author in Sources & Settings if a saved post does not appear.
-7. Inspect source links, representative-source summaries and score factors. Generate three angles and a draft, edit it, approve it and export text through the unchanged workflow.
+7. Inspect source links, multi-document summaries and score factors. Generate three angles and a draft, edit it, approve it and export text through the unchanged workflow.
 
 Supported links have the form `https://x.com/author/status/123456789`; common `twitter.com`, `www.x.com`, `www.twitter.com` and `mobile.twitter.com` variants are accepted. Tracking parameters/fragments are stripped and links are saved canonically under x.com. The URL's author must match the entered handle. Shortened links and `/i/status/` links are not accepted because they do not contain a checkable author handle; open the post yourself and copy its author-based URL instead. Structural validation does **not** prove the post exists or that the copied details are accurate.
 
@@ -130,7 +169,7 @@ No mode silently substitutes another dataset. The same post may intentionally ex
 
 ### Reviewing this enhancement locally
 
-Download branch **feat/manual-x-import** as a ZIP from GitHub, or switch an existing checkout to that branch. Stop the old server with Control+C, install `requirements.txt` in your existing virtual environment and restart using the **Run locally** commands. No new dependency was introduced for the manual feature.
+Download branch **feat/growth-intelligence-loop** as a ZIP from GitHub, or switch an existing checkout to that branch. Stop the old server with Control+C, install `requirements.txt` in your existing virtual environment and restart using the **Run locally** commands. No new runtime dependency was introduced for this enhancement.
 
 ### Production monitoring later
 
@@ -144,13 +183,13 @@ To update an existing checkout on your Mac, open Terminal in the project folder:
 
 ```sh
 git fetch origin
-git switch feat/manual-x-import
-git pull --ff-only origin feat/manual-x-import
+git switch feat/growth-intelligence-loop
+git pull --ff-only origin feat/growth-intelligence-loop
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Stop an older server with Control+C first. For a fresh download, select branch **feat/manual-x-import** on GitHub, choose Code → Download ZIP, extract it, and follow **Run locally** above. No Git installation is needed for the ZIP option. Open http://localhost:8000 in Safari/Chrome. Leave Terminal open while reviewing the app.
+Stop an older server with Control+C first. For a fresh download, select branch **feat/growth-intelligence-loop** on GitHub, choose Code → Download ZIP, extract it, and follow **Run locally** above. No Git installation is needed for the ZIP option. Open http://localhost:8000 in Safari/Chrome. Leave Terminal open while reviewing the app.
 
 ### Private environment configuration
 
@@ -230,20 +269,22 @@ python -m pytest -q
 python tests/browser_smoke.py
 python tests/live_browser_smoke.py
 python tests/manual_browser_smoke.py
+python tests/growth_browser_smoke.py
 node --check app/static/app.js
+node --check app/static/performance.js
 ```
 
-The original browser test uses a temporary database on port 8001; the Live test uses port 8002 and an in-process MockTransport. The manual-form browser test uses port 8003 and blocks non-local browser requests. All three save screenshots under `work/browser/`. Tests default-deny X traffic and blank real service keys; the Live suite uses non-secret placeholders, never actual credentials. Node is only needed for the optional JavaScript syntax check, not to run the app.
+The original browser test uses a temporary database on port 8001; the Live test uses port 8002 and an in-process MockTransport. The manual-form browser test uses port 8003 and blocks non-local browser requests. The growth-loop browser test uses an ephemeral localhost port and intercepts the composer intent before it can contact X. All four save screenshots under `work/browser/`. Tests default-deny X traffic and blank real service keys; the Live suite uses non-secret placeholders, never actual credentials. Node is only needed for the optional JavaScript syntax check, not to run the app.
 
 ## Current limitations and submission status
 
 - Page 7 obscured README requirement: **Pending recruiter clarification**; no text inferred.
-- Live X on-demand ingestion is implemented behind explicit enablement, but real endpoint authentication/credits are unverified. X publishing, automatic scheduling and real generated-content performance tracking are not implemented.
-- Local English lexical clustering can split a topic, merge unrelated topics, miss synonyms, and does not verify truth or coordination. Exact copies are deduplicated; semantic duplicates are not reliably detected. Keyword titles and local content need editorial polish.
+- Live X on-demand ingestion is implemented behind explicit enablement, but real endpoint authentication/credits are unverified. Direct X API publishing and automatic scheduling are not implemented. Manual publication records and real, manually entered content-performance snapshots are implemented.
+- Local English vocabulary/character similarity can still split or merge topics incorrectly and does not verify truth or independence. It is not a neural embedding model. Exact copies are deduplicated; semantic duplicates and multilingual discussion remain limited. Your local ten-post dataset was not assumed available: clustering tests use labeled test-only fixtures.
 - Optional LLM integration is present but not live-tested; local templates are not equivalent to LLM generation.
 - No authentication, tenant separation, team roles, public-hosting hardening or background job infrastructure. Run on localhost for this single-user challenge. Do not expose publicly without those controls and request limits.
 - Draft text is editable; angle cards are suggestions rather than independently editable documents. Human edits must substantiate actual product relevance.
-- Historical analyses persist internally but there is no trend-history comparison UI or automatic learning from outcomes.
+- Historical analyses and measurement snapshots persist. There is no cross-analysis trend-history chart, automatic outcome-driven optimization, or causal engagement-lift experiment.
 - Professional demo video recording, recruiter clarification, verified product positioning and final submission remain outstanding. No claim of proven 10× growth.
 
 Built with **OpenAI Codex** as the vibe-coding assistant; local NLP uses **scikit-learn**. Optional content generation uses the OpenAI API when explicitly configured. No other AI tools or successful integrations are implied.

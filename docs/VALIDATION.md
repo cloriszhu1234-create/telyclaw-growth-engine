@@ -1,6 +1,24 @@
-# Validation — 14 October 2026
+# Validation — 15 October 2026
 
-## Manual X Post Import — latest results
+## Growth Intelligence and Content Execution — latest results
+
+Branch: `feat/growth-intelligence-loop`, based on merged main `920bfb8` (includes PRs #1–#3).
+
+- **96 pytest tests passed, 1 existing TestClient dependency deprecation warning**. The previous 77 tests remain, with scoring assertions intentionally updated for unknown-factor exclusion instead of fabricated neutral momentum.
+- Four browser scripts exercise the original MVP, Manual Imports, mocked Live mode and the new full growth loop, with successful local server startup and desktop/mobile checks. The new script uses an isolated database and ephemeral localhost port; composer navigation is fulfilled locally with a test-only page before any external request can be sent.
+- Test-only fixtures containing nine discussions across three themes cluster into three coherent topics. An unrelated singleton remains separate. This does not claim a measured result on the user's ten real local posts, which were not assumed present.
+- Topics have data-derived names, multi-document summaries with attributed central excerpts, evidence/account counts, source engagement coverage, explicit historical sufficiency and three decision explanations. Zero and missing metrics are tested separately; a viral singleton's engagement-quality factor is damped.
+- Sufficient historical fixtures produce the expected observed sample change; a sparse baseline or one-author baseline leaves momentum null and its weight zero. Two/all four monitoring windows remain covered by regression tests.
+- Source-conditioned local generation and mocked optional LLM generation are tested, including three required angles, distinct topic outputs, length constraints and rejection of a substantial copied source passage. No real LLM call occurred.
+- Publication tests cover approval gating, encoded web intent, no publication side effect from opening the composer, URL/time validation, duplicate records, immutable text, revisions and preserved TXT export.
+- Performance tests cover honest empty/unknown values, partial metrics, zero impressions, post/topic aggregates, paired-denominator rates, measurement history, latest-snapshot-only sums, timestamp validation, persistence and guarded follower attribution.
+- JavaScript syntax, Python compilation and Git diff checks pass. Source/import tables and existing records are never rewritten by the additive two-table migration. Existing manual-post persistence/restart tests still pass.
+
+**No real X/LLM requests, paid credits, billing actions or public posts were used.** Browser fixture URLs and metrics are test-only; screenshots are validation artifacts, not real growth results.
+
+Not verified: the user's local real-post clustering result; actual external X composer rendering (the intent destination is validated/intercepted); real API access; real follower attribution, performance or causal lift. English local clustering, deterministic editorial templates, conservative ASCII/no-URL export constraints and manual/unverified metrics remain documented limitations. Cross-analysis topic taxonomy reconciliation and automatic outcome-driven learning are not implemented.
+
+## Manual X Post Import — previous results
 
 Branch: `feat/manual-x-import`, based on merged main `22f59b6` (includes PRs #1 and #2).
 

@@ -1,5 +1,7 @@
 # 3–5 minute demonstration script
 
+For the expanded Discover → Publish → Measure → Learn flow, use [PRODUCT_DEMO.md](PRODUCT_DEMO.md). Show real published metrics only when available; otherwise demonstrate Performance’s honest empty state.
+
 Target: about 4 minutes. Record browser and voice. For the later Live X enhancement, use the $0-credit interview flow in README; keep real fetching disabled until API access/credits are separately confirmed. Use a fresh personal demo database, default provisional brief, and Synthetic demo. Show that this is synthetic data and local template drafting, not a live X/LLM integration.
 
 | Time | Screen/action | Narrative |

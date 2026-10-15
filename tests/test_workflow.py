@@ -39,7 +39,7 @@ def test_minimum_accounts_time_windows_and_topics(client):
         for topic in run['topics']:
             assert topic['summary'] and topic['evidence'] and topic['authors']
             assert 0<=topic['score']<=100
-            assert topic['score']==round(sum(topic['factors'][k]*WEIGHTS[k] for k in WEIGHTS),1)
+            assert topic['score']==round(sum(topic['factors'][k]*topic['weights'][k] for k in WEIGHTS if topic['factors'][k] is not None),1)
             assert all(p['provenance']=='synthetic' for p in topic['evidence'])
         top=[t for t in run['topics'] if t['top']]
         assert 1<=len(top)<=3 and all(t['recommended'] for t in top)
@@ -123,7 +123,7 @@ def test_empty_vocabulary_and_unknown_baseline():
     p['text']='AI agents support human approval for marketing'
     topics=detect([p,p],[],CLOCK,4,DEFAULT_BRIEF)
     assert len(topics)==1 and len(topics[0]['evidence'])==1
-    assert topics[0]['momentum'] is None and topics[0]['factors']['momentum']==50
+    assert topics[0]['momentum'] is None and topics[0]['factors']['momentum'] is None and topics[0]['weights']['momentum']==0
 
 
 def test_ui_assets_served_locally(client):

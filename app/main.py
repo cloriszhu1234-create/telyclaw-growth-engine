@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
-from . import db, demo, x_api, manual
+from . import db, demo, x_api, manual, publishing
 from dotenv import load_dotenv
 from .trends import DEFAULT_BRIEF, detect
 from .content import generate
@@ -32,6 +32,7 @@ async def lifespan(app):
 
 app = FastAPI(title='TelyClaw Growth Engine', lifespan=lifespan)
 app.include_router(manual.router)
+app.include_router(publishing.router)
 app.mount('/static', StaticFiles(directory=STATIC), name='static')
 
 
@@ -229,7 +230,7 @@ def draft(value: Generate):
             raise HTTPException(502,'AI provider failed. Check server configuration or remove the key to use labeled local templates.')
         now = datetime.now(timezone.utc).isoformat()
         result = dict(id=str(uuid4()), analysis_id=analysis['id'], topic_id=topic['id'], topic_title=topic['title'],
-            mode=analysis['mode'], sources=[{'handle':p['handle'],'url':p.get('url'),'post_type':p.get('post_type'),'provenance':p['provenance']} for p in topic['evidence']],
+            mode=analysis['mode'], topic_key=topic.get('topic_key'), sources=[{'handle':p['handle'],'url':p.get('url'),'post_type':p.get('post_type'),'provenance':p['provenance']} for p in topic['evidence']],
             source_warning=analysis.get('source_warning'), angles=angles, text=text, provider=provider, status='draft',
             created_at=now, updated_at=now, approved_at=None)
         save(con,'drafts',result)
@@ -253,6 +254,8 @@ class Edit(BaseModel):
 def edit_draft(identifier: str, value: Edit):
     with db.connect() as con:
         result = load(con,'drafts',identifier)
+        if result['text'] != value.text and result['status']=='published':
+            raise HTTPException(409,'Published text is preserved. Create a revision to edit a new draft.')
         if result['text'] != value.text:
             result.update(text=value.text,status='draft',approved_at=None,updated_at=datetime.now(timezone.utc).isoformat())
         save(con,'drafts',result)
@@ -267,6 +270,8 @@ def approve(identifier: str):
             Edit(text=result['text'])
         except ValueError:
             raise HTTPException(422,'Draft must be 1–280 ASCII characters without URLs')
+        if result['status']=='published':
+            return result
         result.update(status='approved',approved_at=datetime.now(timezone.utc).isoformat())
         save(con,'drafts',result)
     return result
@@ -276,6 +281,6 @@ def approve(identifier: str):
 def export(identifier: str):
     with db.connect() as con:
         result = load(con,'drafts',identifier)
-        if result['status'] != 'approved':
+        if result['status'] not in ('approved','published'):
             raise HTTPException(409,'Human approval required before export')
     return PlainTextResponse(result['text'],headers={'Content-Disposition':'attachment; filename="approved-post.txt"'})
