@@ -62,6 +62,7 @@ function tab(name) {
     sources: "Sources & settings",
     performance: "Performance",
   }[name];
+  updateProvenanceBanner();
 }
 document
   .querySelectorAll(".nav")
@@ -119,14 +120,47 @@ async function refresh() {
   renderDrafts();
   updateClock();
 }
-function updateClock() {
-  const mode = $("mode").value;
+function updateProvenanceBanner() {
+  const page = document.querySelector(".nav.active")?.dataset.tab || "opportunities";
+  if (page === "performance") {
+    $("mode-label").textContent = "PUBLICATION & PERFORMANCE RECORDS";
+    $("provenance").textContent = "User-confirmed publications and manually recorded metrics. Each record retains its own source mode; publication status and metrics are not verified through the X API.";
+    return;
+  }
+  if (page === "sources") {
+    $("mode-label").textContent = "SOURCE SETTINGS";
+    $("provenance").textContent = "Configure monitored accounts and imports. Demo, manual, JSON and Live X sources stay separate; no X posts are fetched automatically.";
+    return;
+  }
+  if (page === "review" && !currentDraft) {
+    $("mode-label").textContent = "CONTENT STUDIO";
+    $("provenance").textContent = "Drafts retain their own source mode. Select a draft to inspect its source evidence before approval.";
+    return;
+  }
+  const mode = page === "review" ? currentDraft.mode : $("mode").value;
   $("mode-label").textContent = {
     demo: "DEMO WORKSPACE",
     live: "LIVE X · CACHED DATA",
     imported: "JSON IMPORTS",
     manual: "MANUAL IMPORTS",
   }[mode];
+  $("provenance").textContent = {
+    demo: "Fictional accounts, synthetic posts and engagement. No live X connection.",
+    imported:
+      "User-imported posts. Accuracy is not independently verified. No live X connection.",
+    manual:
+      "Manually entered X posts. Text, timestamps and metrics are unverified. No scraping or API requests.",
+    live: "Official X API cache only. No automatic fetch, no synthetic fallback, no platform-wide trend claim.",
+  }[mode];
+  if (page === "review") {
+    const draftModes = {demo: "Demo Data (synthetic)", manual: "Manual Imports", imported: "JSON Imports", live: "Live X cache"};
+    $("mode-label").textContent = "DRAFT SOURCE · " + (draftModes[mode] || "Unknown source");
+    if (!draftModes[mode])
+      $("provenance").textContent = "This draft has no recorded source mode. Inspect its source evidence before publishing.";
+  }
+}
+function updateClock() {
+  const mode = $("mode").value;
   $("live-panel").classList.toggle("hidden", mode !== "live");
   $("sample-warning").classList.toggle("hidden", mode !== "manual");
   if (mode === "manual")
@@ -143,14 +177,7 @@ function updateClock() {
       ? "Scenario clock: " + dateLabel(state.demo_clock)
       : "Current time · " +
         (mode === "live" ? "cached X posts" : "imported posts");
-  $("provenance").textContent = {
-    demo: "Fictional accounts, synthetic posts and engagement. No live X connection.",
-    imported:
-      "User-imported posts. Accuracy is not independently verified. No live X connection.",
-    manual:
-      "Manually entered X posts. Text, timestamps and metrics are unverified. No scraping or API requests.",
-    live: "Official X API cache only. No automatic fetch, no synthetic fallback, no platform-wide trend claim.",
-  }[mode];
+  updateProvenanceBanner();
 }
 async function inspectLive() {
   const handle = $("live-username").value;
@@ -357,6 +384,7 @@ function renderDrafts() {
     );
 }
 function renderEditor() {
+  updateProvenanceBanner();
   if (!currentDraft) return;
   dirty = false;
   const d = currentDraft;
