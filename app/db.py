@@ -15,6 +15,9 @@ def connect():
 def init():
     with connect() as con:
         con.executescript('''
+        CREATE TABLE IF NOT EXISTS publications(id TEXT PRIMARY KEY, draft_id TEXT NOT NULL UNIQUE, x_id TEXT NOT NULL UNIQUE, payload TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS measurements(id TEXT PRIMARY KEY, publication_id TEXT NOT NULL REFERENCES publications(id), measured_at TEXT NOT NULL, payload TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS measurements_publication ON measurements(publication_id,measured_at);
         CREATE TABLE IF NOT EXISTS manual_posts(id TEXT PRIMARY KEY, handle TEXT NOT NULL, created_at TEXT NOT NULL, payload TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS manual_posts_handle ON manual_posts(handle,created_at);
         CREATE TABLE IF NOT EXISTS x_accounts(handle TEXT PRIMARY KEY, payload TEXT NOT NULL);
