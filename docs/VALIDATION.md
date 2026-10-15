@@ -1,6 +1,19 @@
 # Validation — 15 October 2026
 
-## Page-specific source banner — latest results
+## Evidence-led angles and drafts — latest results
+
+Branch: `feat/evidence-led-content`, preserving pending PR #7/#8 commits on top of main `1e6b0f1`. No PR is merged automatically. This round changes only `app/content.py` at runtime, with no new packages, schema changes or record backfill.
+
+- **147 pytest tests passed**, with the same existing TestClient dependency deprecation warning. The 18 new cases cover four-source coding concerns/attribution, distinct editorial purposes, narrower singleton concerns, seven other domain recipes, one-account breadth, old snapshots without insight fields, order reproducibility, unknown signals, long Chinese titles/custom briefs, source instruction text treated as data, mocked LLM outline/attribution, and a new-draft-versus-published-history preservation test.
+- **All six browser scripts passed**: original MVP, manual import, mocked Live X, growth loop, bilingual UI and provenance. The growth test additionally checks the actual generated three-angle output, an original ASCII draft within 280 characters, source clues, proposed product perspective and absence of arbitrary `versus` comparisons before continuing through edit/approval, intercepted composer, manual publication, TXT export and measurement updates. No browser JavaScript errors were observed; English desktop content layout was visually inspected.
+- The preservation test imports synthetic fixtures into a temporary SQLite database, publishes an edited test draft, records a test-only 3-view snapshot, then generates a separate new draft. It checks unchanged source/publication/performance payloads and unchanged approved TXT across restart. No user/local database is opened or rewritten by these tests.
+- All three JavaScript syntax checks, Python compilation and `git diff --check` passed. Uvicorn started successfully for the browser workflows.
+
+Commands: `python -m pytest -q`; `python tests/browser_smoke.py`; `python tests/manual_browser_smoke.py`; `python tests/live_browser_smoke.py`; `python tests/growth_browser_smoke.py`; `python tests/bilingual_browser_smoke.py`; `python tests/provenance_browser_smoke.py`; `node --check` for each of `app.js`, `i18n.js`, `performance.js`; `python -m compileall -q app`; `git diff --check`. In this cloud executor pytest uses the already-installed local test dependencies through `PYTHONPATH=/workspace/work/test-deps:$PYTHONPATH`; no runtime dependency changes were made.
+
+No real X or LLM calls, paid credits, scraping, billing actions or public publishing. Local generation remains labeled deterministic English editorial templates, not an LLM or fact verification. Same-concern clusters can yield similar suggestions. Source claims are not verified; editorial tests are proposals, not measured benefits or product capabilities. Human review remains required. The user's complete private source set and a human editorial acceptance study were not available here; review new drafts locally. Recruiter clarification, verified positioning and the final demo video remain outstanding.
+
+## Page-specific source banner — previous results
 
 Branch: `fix/page-provenance-banner`. Main remains `1e6b0f1`; the branch carries the exact pending PR #7 commit `6425d2b` to preserve the already-validated context correction. No existing PR is modified or automatically merged.
 
