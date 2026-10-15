@@ -2,7 +2,7 @@
 
 将选定 X 账号的讨论转化为有来源依据的内容机会，完成 **发现 → 理解 → 排序 → 创作 → 审批 → 手动发布 → 衡量 → 学习**。这是可本地运行的单用户 MVP，不依赖付费 API；中文界面默认开启，可切换 English。
 
-**提交版本：`feat/evidence-led-content`。** 此分支包含最近验证的修复；准备交付时 PR #7–#9 尚未合入 `main`，请使用此分支或配套源码 ZIP。实际版本以 ZIP 内的 `SOURCE_VERSION.txt` 为准。不要用交付包覆盖已有项目或 `data/growth.db`。
+**提交版本：`feat/evidence-led-content`。** 此分支包含最近验证的修复；准备交付时 PR #7–#9 尚未合入 `main`，请使用此分支或指定提交的源码 ZIP。固定版本以下载链接中的 commit 为准；另行打包的快照附带 `SOURCE_VERSION.txt`。不要用交付包覆盖已有项目或 `data/growth.db`。
 
 ## 快速运行（macOS / Linux）
 
