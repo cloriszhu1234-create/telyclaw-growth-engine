@@ -313,7 +313,7 @@ def test_known_zero_metrics_are_not_missing(client, transport):
     row=x_api.normalize_post({**tweet(),'public_metrics':{'like_count':0,'retweet_count':0,'reply_count':0}},'elonmusk')
     topics=detect([row],[],datetime.now(timezone.utc),4,DEFAULT_BRIEF)
     assert topics[0]['factors']['engagement']==0
-    assert topics[0]['weights']['engagement']==pytest.approx(.15)
+    assert topics[0]['weights']['engagement']==pytest.approx(.20)
 
 
 def test_dedup_replaces_updated_metrics(client, transport, monkeypatch):

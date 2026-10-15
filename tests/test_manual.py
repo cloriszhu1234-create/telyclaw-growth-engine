@@ -140,7 +140,7 @@ def test_empty_manual_mode_warns_and_does_not_fallback(client):
 def test_known_zero_metrics_retain_engagement_factor(client):
     client.post('/api/manual/posts',json=post(likes=0,reposts=0,replies=0))
     topic=run(client)['topics'][0]
-    assert topic['factors']['engagement']==0 and topic['weights']['engagement']==.15
+    assert topic['factors']['engagement']==0 and topic['weights']['engagement']==pytest.approx(.20)
 
 
 def test_concurrent_duplicate_saves(client):
