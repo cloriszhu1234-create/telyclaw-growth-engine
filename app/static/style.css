@@ -847,3 +847,30 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+.topic-performance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.performance-totals {
+  margin-top: 20px;
+}
+.performance-totals strong {
+  font-size: 23px;
+}
+#publishing-controls {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+#publish-form {
+  margin-top: 16px;
+}
+.topic-meta {
+  flex-wrap: wrap;
+}
+.status.published {
+  color: var(--green);
+}

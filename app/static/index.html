@@ -15,6 +15,8 @@
           ◈ <span>Opportunities</span></button
         ><button class="nav" data-tab="review">
           ▤ <span>Content studio</span><b id="draft-count">0</b></button
+        ><button class="nav" data-tab="performance">
+          ↗ <span>Performance</span></button
         ><button class="nav" data-tab="sources">
           ◎ <span>Sources & settings</span>
         </button>
@@ -42,7 +44,9 @@
         <section id="opportunities" class="view">
           <div class="heading">
             <div>
-              <div class="eyebrow">LISTEN. FIND THE ANGLE. GROW.</div>
+              <div class="eyebrow">
+                DISCOVER → UNDERSTAND → PRIORITIZE → CREATE
+              </div>
               <h1>Turn signals into your next move.</h1>
               <p>
                 Discover the conversations worth joining — and give them a
@@ -164,7 +168,7 @@
             </article>
           </div>
           <div class="footnote">
-            Local statistical NLP · Transparent scoring · Human judgment at
+            Local topic synthesis · Transparent scoring · Human judgment at
             every publishing decision
           </div>
         </section>
@@ -178,6 +182,36 @@
             <div id="draft-list" class="draft-list"></div>
             <article class="panel" id="editor">
               <div class="empty">Generate a draft from a trend to begin.</div>
+            </article>
+          </div>
+        </section>
+        <section id="performance" class="view hidden">
+          <div class="heading">
+            <div class="eyebrow">PUBLISH → MEASURE → LEARN</div>
+            <h1>Content performance</h1>
+            <p>
+              Record real outcomes from manually published posts. Unknown
+              metrics stay unmeasured.
+            </p>
+          </div>
+          <article class="panel">
+            <p id="performance-formula"></p>
+            <p id="performance-warning"></p>
+          </article>
+          <div id="performance-totals" class="metrics performance-totals"></div>
+          <details class="panel">
+            <summary>All aggregate outcomes and coverage</summary>
+            <div id="performance-outcomes"></div>
+          </details>
+          <div class="section-title"><h2>Performance by topic</h2></div>
+          <div id="performance-topics"></div>
+          <div class="review-layout">
+            <div id="publication-list" class="draft-list"></div>
+            <article id="measurement-editor" class="panel">
+              <div class="empty">
+                No published posts yet. Approve a draft, publish it yourself in
+                X, then record its actual URL in Content Studio.
+              </div>
             </article>
           </div>
         </section>
@@ -359,5 +393,6 @@
     </div>
     <div id="toast" role="status" aria-live="polite"></div>
     <script src="/static/app.js"></script>
+    <script src="/static/performance.js"></script>
   </body>
 </html>

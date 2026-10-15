@@ -48,6 +48,8 @@ async function api(path, method = "GET", body) {
   return data;
 }
 function tab(name) {
+  if (name === "performance")
+    loadPerformance().catch((err) => toast(err.message, true));
   document
     .querySelectorAll(".view")
     .forEach((v) => v.classList.toggle("hidden", v.id !== name));
@@ -58,6 +60,7 @@ function tab(name) {
     opportunities: "Opportunities",
     review: "Content studio",
     sources: "Sources & settings",
+    performance: "Performance",
   }[name];
 }
 document
@@ -247,7 +250,7 @@ $("analyze").onclick = async () => {
       analysis.topics
         .map(
           (t) =>
-            `<button class="topic" data-topic="${e(t.id)}"><div class="topic-top"><span>${t.top ? "↗ TOP " + t.rank : "SIGNAL " + t.rank}${!t.recommended ? " · LOW RELEVANCE" : ""}</span><span class="score">${t.score}<small> / 100</small></span></div><h3>${e(t.title)}</h3><p>${e(t.summary)}</p><div class="topic-meta"><span>◎ ${t.authors.length} accounts</span><span>▤ ${t.evidence.length} unique posts</span><span>${t.momentum === null ? "No baseline" : (t.momentum > 0 ? "+" : "") + t.momentum + "% momentum"}</span></div></button>`,
+            `<button class="topic" data-topic="${e(t.id)}"><div class="topic-top"><span>${t.top ? "↗ TOP " + t.rank : "SIGNAL " + t.rank}${!t.recommended ? " · LOW RELEVANCE" : ""}</span><span class="score">${t.score}<small> / 100</small></span></div><h3>${e(t.title)}</h3><p>${e(t.summary)}</p><div class="topic-meta"><span>◎ ${t.authors.length} accounts</span><span>▤ ${t.evidence.length} unique posts</span><span>${t.available_engagement ?? "Not measured"} available engagement${t.metrics_complete ? "" : " (partial)"}</span><span>${t.momentum === null ? "Insufficient historical data" : (t.momentum > 0 ? "+" : "") + t.momentum + "% observed change"}</span></div></button>`,
         )
         .join("") ||
       '<div class="empty">No eligible posts in this window. For Live X, fetch manually when access is enabled, then analyze the cache. Otherwise enable accounts, choose a wider window, or import recent data.</div>';
@@ -301,7 +304,7 @@ function selectTopic(id) {
     .querySelectorAll(".topic")
     .forEach((b) => b.classList.toggle("selected", b.dataset.topic === id));
   $("detail").innerHTML =
-    `<div class="detail-label">OPPORTUNITY BRIEF · ${analysis.mode === "demo" ? "SYNTHETIC EVIDENCE" : analysis.mode === "live" ? "LIVE X CACHE" : analysis.mode === "manual" ? "MANUAL · UNVERIFIED" : "JSON IMPORTS"}</div><h2>${e(t.title)}</h2><div class="summary">${e(t.summary)}<br><small class="subtle">${e(t.summary_method)}</small></div><h4>Why this is worth a look</h4><p>${e(t.reason)}</p>${analysis.source_warning ? `<p class="source-warning">${e(analysis.source_warning)}</p>` : ""}<h4>Opportunity score <span class="tag">${t.score} / 100</span></h4>${Object.entries(
+    `<div class="detail-label">OPPORTUNITY BRIEF · ${analysis.mode === "demo" ? "SYNTHETIC EVIDENCE" : analysis.mode === "live" ? "LIVE X CACHE" : analysis.mode === "manual" ? "MANUAL · UNVERIFIED" : "JSON IMPORTS"}</div><h2>${e(t.title)}</h2><div class="summary">${e(t.summary)}<br><small class="subtle">${e(t.summary_method)}</small></div><h4>Why It’s Trending</h4><p>${e(t.why_trending || t.reason)}</p><h4>Why TelyClaw Should Care</h4><p>${e(t.why_care || "Review the configured brand brief.")}</p><h4>Recommended Content Move</h4><p>${e(t.content_move || "Review source evidence before drafting.")}</p>${analysis.source_warning ? `<p class="source-warning">${e(analysis.source_warning)}</p>` : ""}<h4>Opportunity score <span class="tag">${t.score} / 100</span></h4>${Object.entries(
       t.factors,
     )
       .map(
@@ -310,7 +313,7 @@ function selectTopic(id) {
       )
       .join(
         "",
-      )}<p class="subtle">Weighted heuristic, not a prediction. Relevance uses your brand keywords. Source engagement = likes + 2×reposts + 2×replies.</p><details><summary>Inspect ${t.evidence.length} source posts & methodology</summary><p>TF-IDF similarity clustering, exact-text deduplication and representative-source summaries. Previous equal window: ${t.prior_count} matching posts. Similarity may merge or split topics incorrectly.</p>${t.evidence.map(evidenceHTML).join("")}</details><button class="primary" id="generate">Create angles & draft →</button><p class="subtle">Local editorial templates by default; optional OpenAI configuration. Human approval required.</p>`;
+      )}<p class="subtle">Weighted heuristic, not a prediction. Relevance uses your brand keywords. Available source engagement = observed likes + reposts + replies. Quality scoring is damped for single-account signals. Unknown factors have zero weight; remaining weights rescale.</p><details><summary>Inspect ${t.evidence.length} source posts & methodology</summary><p>Local synonym normalization, word/phrase + character similarity, exact-text deduplication and multi-document summaries. Summaries use all documents for theme extraction, with attributed excerpts. Previous equal window: ${t.prior_count} matching posts. Similarity may merge or split topics incorrectly.</p>${t.evidence.map(evidenceHTML).join("")}</details><button class="primary" id="generate">Create angles & draft →</button><p class="subtle">Local editorial templates by default; optional OpenAI configuration. Human approval required.</p>`;
   $("generate").onclick = async () => {
     $("generate").disabled = true;
     $("generate").textContent = "Preparing draft…";
@@ -372,9 +375,53 @@ function renderEditor() {
       )
       .join(
         "",
-      )}<h4>Three ways into the conversation</h4>${d.angles.map((a) => `<div class="angle"><strong>${e(a.type)}</strong><p>${e(a.idea)}</p></div>`).join("")}<label for="draft-text">Your X post</label><textarea id="draft-text" rows="6" maxlength="280">${e(d.text)}</textarea><div class="editor-tools"><span id="save-state">Saved · ${d.approved_at ? "Approved " + e(dateLabel(d.approved_at)) : "Review claims and positioning before approval"}</span><span id="char-count">${d.text.length} / 280</span></div><p>Draft suggestions are labeled by provider and are not verified TelyClaw product claims. Check the source, add your expertise, and confirm the angle fits your audience. MVP export supports ASCII text without URLs.</p><div class="actions"><button class="secondary" id="save-draft">Save changes</button><button class="primary" id="approve-draft">Approve post</button><a class="secondary ${d.status !== "approved" ? "hidden" : ""}" id="export-draft" href="/api/drafts/${e(d.id)}/export">Export approved text ↗</a></div><p class="subtle">Export downloads text for manual publishing. Nothing is posted to X by this application. Editing approved text requires approval again.</p>`;
+      )}<h4>Three ways into the conversation</h4>${d.angles.map((a) => `<div class="angle"><strong>${e(a.type)}</strong><p>${e(a.idea)}</p></div>`).join("")}<label for="draft-text">Your X post</label><textarea id="draft-text" rows="6" maxlength="280">${e(d.text)}</textarea><div class="editor-tools"><span id="save-state">Saved · ${d.approved_at ? "Approved " + e(dateLabel(d.approved_at)) : "Review claims and positioning before approval"}</span><span id="char-count">${d.text.length} / 280</span></div><p>Draft suggestions are labeled by provider and are not verified TelyClaw product claims. Check the source, add your expertise, and confirm the angle fits your audience. MVP export supports ASCII text without URLs.</p><div class="actions"><button class="secondary" id="save-draft">Save changes</button><button class="primary" id="approve-draft">Approve post</button><a class="secondary ${!["approved", "published"].includes(d.status) ? "hidden" : ""}" id="export-draft" href="/api/drafts/${e(d.id)}/export">Export approved text ↗</a></div><p class="subtle">Export downloads text for manual publishing. Nothing is posted to X by this application. Editing approved text requires approval again.</p>`;
+  if (d.status === "published") {
+    $("draft-text").readOnly = true;
+    $("save-draft").disabled = true;
+    $("approve-draft").disabled = true;
+  }
+  const publishingControls = document.createElement("div");
+  publishingControls.id = "publishing-controls";
+  $("editor").append(publishingControls);
+  if (d.status === "approved") {
+    publishingControls.innerHTML = `<h4>Publish manually</h4><p>Open in X only prepares the composer. Review and confirm publication there, then record the actual post below.</p><a class="secondary" href="/api/drafts/${e(d.id)}/composer" target="_blank" rel="noopener noreferrer">Open in X ↗</a><form id="publish-form"><label for="published-url">Actual published X post URL</label><input id="published-url" type="url" required placeholder="https://x.com/your_account/status/123456789"><label for="published-time">Publication time (Asia/Shanghai, UTC+08:00)</label><input id="published-time" type="datetime-local" required><button class="primary" id="mark-published">Mark as Published</button><p id="publish-result" role="status"></p></form>`;
+    $("publish-form").onsubmit = async (event) => {
+      event.preventDefault();
+      $("mark-published").disabled = true;
+      try {
+        await api("drafts/" + d.id + "/publish", "POST", {
+          url: $("published-url").value,
+          published_at: new Date(
+            $("published-time").value + "+08:00",
+          ).toISOString(),
+        });
+        await refresh();
+        currentDraft = state.drafts.find((value) => value.id === d.id);
+        renderEditor();
+        toast(
+          "Publication recorded manually. Add real metrics in Performance.",
+        );
+      } catch (err) {
+        $("publish-result").textContent = err.message;
+        $("mark-published").disabled = false;
+      }
+    };
+  } else if (d.status === "published") {
+    publishingControls.innerHTML = `<h4>Published · user confirmed</h4><p>${e(d.published_url)} · ${e(dateLabel(d.published_at))}</p><p>Published text is preserved. Create a revision to start another human-reviewed draft.</p><button class="secondary" id="revision">Create revision</button>`;
+    $("revision").onclick = async () => {
+      try {
+        currentDraft = await api("drafts/" + d.id + "/revision", "POST");
+        await refresh();
+        renderEditor();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    };
+  }
   $("draft-text").oninput = () => {
     dirty = true;
+    $("publishing-controls").classList.add("hidden");
     $("char-count").textContent = $("draft-text").value.length + " / 280";
     $("save-state").textContent = "Unsaved changes · Approval required";
     $("export-draft").classList.add("hidden");
