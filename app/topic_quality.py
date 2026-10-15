@@ -12,7 +12,7 @@ FACETS = {
     'validation': ('testing and verification', '测试与验证',
                    r'\b(?:tests?|testing|verification|validation|verify|verified|evaluat\w*)\b'),
     'context': ('context and token efficiency', '上下文与 Token 效率',
-                r'\b(?:context (?:compression|management|efficien\w*|budget\w*)|token (?:efficien\w*|budget\w*|usage)|compress\w* (?:context|memory)|memory compression)\b'),
+                r'\b(?:context (?:compression|compaction|management|efficien\w*|budget\w*)|tokens? (?:efficien\w*|budget\w*|usage)|compress\w* (?:context|memory)|memory compression)\b'),
     'execution': ('execution harnesses and complex tasks', '执行框架与复杂任务',
                   r'\b(?:agent harness\w*|execution harness\w*|harness\w*|complex (?:software |engineering )?tasks?|software engineering tasks?)\b'),
 }
@@ -31,6 +31,21 @@ LABELS = {
 def clean(text):
     # Attribution/links never establish the subject of a discussion.
     return re.sub(r'https?://\S+|@[\w_]+', ' ', text.lower())
+
+
+def context_matches(text):
+    """Match source phrases, not product names or claimed savings percentages.
+
+    Bare tool output/compaction is ambiguous. Additional matches need both
+    model/agent vocabulary and a context/prompt/memory connection. Keep this
+    presentation rule separate from the clustering vocabulary and score inputs.
+    """
+    matches = {m.group(0) for m in re.finditer(FACETS['context'][2], text)}
+    has_context = re.search(r'\b(?:context|prompt|working memory)\b', text)
+    has_model = re.search(r'\b(?:agents?|assistants?|llms?|language models?|coding)\b', text)
+    if has_context and has_model:
+        matches.update(m.group(0) for m in re.finditer(r'\b(?:tool[ -]outputs?|compaction)\b', text))
+    return sorted(matches)
 
 
 def protocol_evidence(text):
@@ -55,7 +70,7 @@ def presentation(theme, evidence, fallback_title=None):
                 re.search(r'\bagents?\b', text) and re.search(r'\b(?:software engineering|coding|programming|code)\b', text))
             if theme == 'coding' and not coding:
                 continue
-            matches = sorted({m.group(0) for m in re.finditer(pattern, text)})
+            matches = context_matches(text) if key == 'context' else sorted({m.group(0) for m in re.finditer(pattern, text)})
             if matches:
                 rows.append({'post_id': post['id'], 'handle': post['handle'], 'matches': matches})
         if rows:

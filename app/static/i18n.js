@@ -203,6 +203,17 @@ Object.assign(ZH,{
   "Evidence behind this insight": "查看洞察对应的来源线索",
   "Inspect the original source posts below.": "请查看下方完整来源原文。"
 });
+Object.assign(ZH,{
+  "PUBLICATION & PERFORMANCE RECORDS": "发布与表现记录",
+  "User-confirmed publications and manually recorded metrics. Each record retains its own source mode; publication status and metrics are not verified through the X API.": "本页展示用户确认的发布记录与手动录入的表现指标；每条记录分别标注来源模式，发布状态及指标均未经 X API 验证。",
+  "SOURCE SETTINGS": "数据源设置",
+  "Configure monitored accounts and imports. Demo, manual, JSON and Live X sources stay separate; no X posts are fetched automatically.": "在此配置监控账号与导入数据。演示、手动导入、JSON 导入和实时 X 数据保持区分；不会自动获取 X 帖子。",
+  "Drafts retain their own source mode. Select a draft to inspect its source evidence before approval.": "每篇草稿保留各自的数据来源。请选择草稿，查看来源证据后再进行人工审核。",
+  "DRAFT SOURCE": "草稿来源",
+  "Live X cache": "实时 X 缓存",
+  "Unknown source": "来源未知",
+  "This draft has no recorded source mode. Inspect its source evidence before publishing.": "此草稿未记录来源模式，发布前请核查支持它的来源证据。"
+});
 const RULES = [
  [/^Provisional Discussion: (.+)$/i,a=>`待确认的讨论主题：${a}`],
  [/^Unexpected (?:token|end).*$/,()=> 'JSON 格式无效，请按照导入示例检查文件。'],

@@ -69,6 +69,11 @@ def run():
                 page.screenshot(path=str(output/'growth-opportunities.png'),full_page=True)
                 page.locator('#generate').click();page.locator('#draft-text').wait_for()
                 assert page.locator('.angle').count()==3
+                generated=page.locator('#draft-text').input_value()
+                assert generated.isascii() and 1<=len(generated)<=280 and 'TelyClaw' in generated
+                assert 'versus' not in generated and 'Source clues:' in page.locator('.angle').first.inner_text()
+                assert 'proposed' in page.locator('.angle').nth(2).inner_text()
+                page.screenshot(path=str(output/'growth-content.png'),full_page=True)
                 page.locator('#draft-text').fill('Agent orchestration needs a buyer test & clear ownership. Which handoff would you measure? #Growth')
                 page.locator('#approve-draft').click()
                 page.locator('#publishing-controls a').wait_for()
