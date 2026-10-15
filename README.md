@@ -49,17 +49,27 @@ SQLite persistence      scikit-learn local NLP
 
 Accounts, posts, analysis evidence snapshots, brand settings and drafts are persisted. Exact duplicates are removed during topic analysis, not from the stored raw dataset. An analysis stores its original brief and data context so later configuration changes do not silently rewrite an existing draft's rationale. Editing approved draft text clears its approval.
 
+## 中文 / English interface
+
+New browser profiles default to **简体中文**. Use the visible **中文 / English** switch in the header; your choice is stored under `telyclaw.language` in this browser's localStorage and survives navigation/reloads. If storage is unavailable the current page still switches, and new visits default to Chinese. The four workspace pages, action/status labels, dynamic explanations, methodology, input errors, publishing instructions and metric definitions are localized. Technical identifiers, unknown-domain keywords and user-authored evidence remain in their original language. The API documentation at `/docs` remains developer-facing English.
+
+**Interface language is separate from content language.** Original X text, handles, links, configured brand brief, source excerpts, generated angle ideas, editable X drafts and published snapshots are not translated or rewritten. English drafts remain English in a Chinese interface. Switching language preserves unsaved draft/form/metric values and approval state. The current conservative ASCII draft policy remains unchanged; Chinese post generation/export is not part of this UI localization round.
+
+`app/static/i18n.js` is the presentation catalogue: English UI copy → natural Chinese, with parameterized rules for counts, evidence summaries and sanitized validation/provider errors. A text-node renderer retains English originals for reversible switching without recreating forms; `data-raw` explicitly protects source evidence and generated content. Add new interface copy to this catalogue and cover dynamic variations in the bilingual browser test. Existing saved records and analyses remain unchanged; run a fresh analysis to use the improved clustering. There is **no database migration** in this round. Do not delete, reset or replace `data/growth.db`.
+
 ## Topic discovery and evidence summaries
 
-No API key or downloaded model is required. The local method normalizes general vocabulary equivalents (for example coordination/orchestration and programming/coding), removes URLs/handles and generic stop words, and applies light morphology. It combines **80% word/phrase TF-IDF cosine similarity with 20% character n-gram similarity**. A pair must share at least two content concepts. Average-link agglomerative clustering merges at distance 0.80 (similarity 0.20), balancing related wording with singleton preservation.
+No API key, model download or network call is required for clustering. `app/semantics.py` contains a versioned, inspectable domain vocabulary for multi-agent orchestration, frameworks/interoperability, coding assistants, human oversight, context/memory efficiency, content attribution, social listening and software security. Patterns normalize **specific concepts**, not source IDs or sample-specific cluster assignments. Generic AI/agent/workflow mentions are insufficient. For example, context compression and token budgeting can match without sharing two literal words. A broad “multi-agent” mention cannot override conflicting concrete concerns such as context budgets versus human approval.
 
-These are general normalization rules, not hard-coded topic names or assignments for your sample. Names come from salient non-overlapping phrases in each cluster. Every supporting document contributes to theme extraction; summary excerpts are ordered by centrality to the full cluster centroid. The local summary reports the source count/author count and up to three attributed source excerpts, with all remaining source discussions available below. This is **multi-document extractive synthesis**, not a neural semantic model or fact verification. English synonyms absent from the vocabulary can still split a topic; broad shared language can merge distinct debates. Review evidence rather than treating a cluster as proven consensus.
+The local method retains **80% word/phrase TF-IDF cosine similarity + 20% character n-gram similarity**. A shared specific concept raises pair similarity to at least 0.64; otherwise at least two non-generic content words must overlap. Pairs with different identified domain concerns and no shared specific concept are rejected. Average-link agglomerative clustering uses distance 0.69 (similarity 0.31), with **no preset number of clusters**. Average linkage limits single-link bridge effects but does not eliminate every ambiguous merge.
+
+A majority-supported concept supplies a concise bilingual theme label; ties favor concrete themes over a bare multi-agent mention. Unsupported domains receive a conservative keyword discussion label. Labels come from a reusable domain taxonomy, not arbitrary filtered bigrams or a fixed list of the user's posts. Every supporting document contributes to theme extraction; summary excerpts are ordered by centrality to the cluster centroid. The summary reports source/account counts and up to three attributed excerpts, while all original supporting posts remain inspectable. Each topic also exposes matched concept phrases per source and the exact clustering method. This is **local vocabulary-assisted semantic grouping and extractive synthesis**, not neural embeddings, an LLM, fact verification or evidence of platform-wide consensus. Optional LLM-assisted *clustering* is not implemented; the existing optional content-generation adapter is separate.
 
 Exact normalized-text duplicates are removed conservatively before analysis. Supporting post/account counts therefore describe the deduplicated evidence, not all raw eligible rows. The dashboard displays available source engagement (observed likes + reposts + replies), marks incomplete counts and retains original URLs/timestamps/text. Missing values are never invented.
 
 ### Historical evidence and momentum
 
-**Insufficient historical data** is the default. There is no neutral positive momentum score. A prior match requires cosine similarity ≥0.25 plus two shared content concepts. To show observed sample velocity, both equal-duration windows need at least three distinct matched posts, at least two authors, and a timestamp spread of at least 25% of the window. Only then is change calculated as `(current count − prior count) / prior count × 100` and labeled rising or flat/falling **in the observed sample**.
+**Insufficient historical data** is the default. There is no neutral positive momentum score. A prior match requires the same specific domain theme, or (for unclassified themes) cosine similarity ≥0.25 plus two shared non-generic content words. Case variants of the same handle count as one author. To show observed sample velocity, both equal-duration windows need at least three distinct matched posts, at least two authors, and a timestamp spread of at least 25% of the window. Only then is change calculated as `(current count − prior count) / prior count × 100` and labeled rising or flat/falling **in the observed sample**.
 
 Even sufficient counts do not establish complete platform coverage, causation or statistically reliable platform growth. Manual/JSON samples may be selected unevenly; the Live adapter retrieves just one page. Those limitations remain visible. Publication timestamps are actual evidence; historical baselines and growth percentages are not synthesized.
 
@@ -69,16 +79,16 @@ The base weights follow the challenge-oriented recommendations:
 
 | Factor | Base weight | Observed input / heuristic |
 |---|---:|---|
-| TelyClaw relevance | 30% | Configured brand keyword matches, capped at four; an editorial heuristic |
+| TelyClaw relevance | 30% | 25 points per specific configured keyword + 35 for a supported domain theme when the brief includes an AI/agent editorial scope; otherwise only 10 points for generic matched terms; capped at 100. Domain fit is an explicit editorial assumption, not a verified product capability |
 | Momentum | 25% | Observed count change when the evidence checks above pass; factor = clamp(change / 2, 0, 100) |
 | Engagement quality | 15% | Log-scaled mean source engagement, damped by `min(1, independent authors / 3)` so a single viral source is not treated as broad confirmation |
 | Independent accounts | 15% | Distinct deduplicated authors / 5, capped at 100 |
-| Content opportunity | 10% | Evidence depth proxy: 20 × unique posts + 10 × (authors − 1), capped at 100 |
+| Content opportunity | 10% | Editorial depth proxy: min(100, 35 + 10 × independent authors + min(20, 10 × distinct recognized concepts)). Repeated posts from one author do not increase this dimension; it does not predict originality |
 | Freshness | 5% | Age of newest source relative to the selected window, bounded 0–100 |
 
 Unknown momentum or incomplete likes/reposts/replies receive **no factor value and zero effective weight**. Remaining weights are rescaled to total 100%; the UI displays these effective weights and explains the missing inputs. A known zero remains zero. Partial available engagement totals are still shown as partial, but are not used as if complete in scoring. Scores with different coverage need judgment.
 
-Up to three relevance-gated clusters are highlighted; the app never invents a third opportunity when fewer relevant topics exist. Every topic has **Why It’s Trending** (observed support and limits), **Why TelyClaw Should Care** (connection to the configurable audience/positioning), and **Recommended Content Move** (a source-based comparison and test). These are editorial hypotheses, not verified product claims. The default brief is explicitly provisional because the assignment did not provide authoritative product capabilities or ICP. Confirm and edit it in Sources & Settings.
+Up to three relevance-gated clusters are highlighted; the app never invents a third opportunity when fewer relevant topics exist. Every topic has **Why It’s Trending** (observed support and limits), **Why TelyClaw Should Care** (connection to the configurable audience/positioning), and **Recommended Content Move** (a theme-specific editorial experiment plus a source-based comparison and test). These are editorial hypotheses, not verified product claims. The default brief is explicitly provisional because the assignment did not provide authoritative product capabilities or ICP. Confirm and edit it in Sources & Settings.
 
 ## Trend-specific generation and human review
 
@@ -169,7 +179,7 @@ No mode silently substitutes another dataset. The same post may intentionally ex
 
 ### Reviewing this enhancement locally
 
-Download branch **feat/growth-intelligence-loop** as a ZIP from GitHub, or switch an existing checkout to that branch. Stop the old server with Control+C, install `requirements.txt` in your existing virtual environment and restart using the **Run locally** commands. No new runtime dependency was introduced for this enhancement.
+Download branch **feat/semantic-topics-bilingual-ui** as a ZIP from GitHub, or switch an existing checkout to that branch. Stop the old server with Control+C, install `requirements.txt` in your existing virtual environment and restart using the **Run locally** commands. No new runtime dependency was introduced for this enhancement.
 
 ### Production monitoring later
 
@@ -189,7 +199,7 @@ git pull --ff-only origin feat/growth-intelligence-loop
 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Stop an older server with Control+C first. For a fresh download, select branch **feat/growth-intelligence-loop** on GitHub, choose Code → Download ZIP, extract it, and follow **Run locally** above. No Git installation is needed for the ZIP option. Open http://localhost:8000 in Safari/Chrome. Leave Terminal open while reviewing the app.
+Stop an older server with Control+C first. For a fresh download, select branch **feat/semantic-topics-bilingual-ui** on GitHub, choose Code → Download ZIP, extract it, and follow **Run locally** above. No Git installation is needed for the ZIP option. Open http://localhost:8000 in Safari/Chrome. Leave Terminal open while reviewing the app.
 
 ### Private environment configuration
 
@@ -270,17 +280,19 @@ python tests/browser_smoke.py
 python tests/live_browser_smoke.py
 python tests/manual_browser_smoke.py
 python tests/growth_browser_smoke.py
+python tests/bilingual_browser_smoke.py
+node --check app/static/i18n.js
 node --check app/static/app.js
 node --check app/static/performance.js
 ```
 
-The original browser test uses a temporary database on port 8001; the Live test uses port 8002 and an in-process MockTransport. The manual-form browser test uses port 8003 and blocks non-local browser requests. The growth-loop browser test uses an ephemeral localhost port and intercepts the composer intent before it can contact X. All four save screenshots under `work/browser/`. Tests default-deny X traffic and blank real service keys; the Live suite uses non-secret placeholders, never actual credentials. Node is only needed for the optional JavaScript syntax check, not to run the app.
+The original browser test uses a temporary database on port 8001; the Live test uses port 8002 and an in-process MockTransport. The manual-form browser test uses port 8003 and blocks non-local browser requests. The growth-loop browser test uses an ephemeral localhost port and intercepts the composer intent before it can contact X. The four English regression scripts save screenshots under `work/browser/`; the bilingual test uses another ephemeral port and saves Chinese desktop captures under `work/`. It verifies default language, persistence, unchanged source/draft text, retained unsaved edits, approval/export, composer URL, publication and metric entry without external requests. Browser tests respect `CHROMIUM_PATH` when supplied. Tests default-deny X traffic and blank real service keys; the Live suite uses non-secret placeholders, never actual credentials. Node is only needed for the optional JavaScript syntax check, not to run the app.
 
 ## Current limitations and submission status
 
 - Page 7 obscured README requirement: **Pending recruiter clarification**; no text inferred.
 - Live X on-demand ingestion is implemented behind explicit enablement, but real endpoint authentication/credits are unverified. Direct X API publishing and automatic scheduling are not implemented. Manual publication records and real, manually entered content-performance snapshots are implemented.
-- Local English vocabulary/character similarity can still split or merge topics incorrectly and does not verify truth or independence. It is not a neural embedding model. Exact copies are deduplicated; semantic duplicates and multilingual discussion remain limited. Your local ten-post dataset was not assumed available: clustering tests use labeled test-only fixtures.
+- Local English domain-vocabulary/character similarity can still split or merge topics incorrectly and does not verify truth or independence. It is not a neural embedding model. Exact copies are deduplicated; semantic duplicates and multilingual discussion remain limited. Your local ten-post dataset was not assumed available: clustering tests use labeled test-only fixtures.
 - Optional LLM integration is present but not live-tested; local templates are not equivalent to LLM generation.
 - No authentication, tenant separation, team roles, public-hosting hardening or background job infrastructure. Run on localhost for this single-user challenge. Do not expose publicly without those controls and request limits.
 - Draft text is editable; angle cards are suggestions rather than independently editable documents. Human edits must substantiate actual product relevance.
@@ -288,3 +300,42 @@ The original browser test uses a temporary database on port 8001; the Live test 
 - Professional demo video recording, recruiter clarification, verified product positioning and final submission remain outstanding. No claim of proven 10× growth.
 
 Built with **OpenAI Codex** as the vibe-coding assistant; local NLP uses **scikit-learn**. Optional content generation uses the OpenAI API when explicitly configured. No other AI tools or successful integrations are implied.
+
+## Review this optimization locally (macOS)
+
+Stop the old app with Control+C. In the **existing project folder** (so your database stays in place), run:
+
+```sh
+git fetch origin
+git switch feat/semantic-topics-bilingual-ui
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+If your environment folder has another name, activate that environment instead. For a fresh setup use the Run locally instructions above; copy your existing database only if you deliberately move project folders. Open http://localhost:8000. Keep `X_LIVE_ENABLED=false` and leave `OPENAI_API_KEY` unset for the free local demonstration. This feature branch is intended for review; merging remains a separate user action.
+
+### Mandarin interview walkthrough
+
+1. Start in 中文 and Demo; point out the synthetic-data banner. Switch briefly to English and back to demonstrate international usability.
+2. In 数据源与监控设置, confirm at least five enabled accounts and inspect the real manually imported sources. Do not mistake Demo for real data.
+3. Return to 趋势机会 → 手动导入 → 最近 7 天 → 分析信号. A fresh analysis is required; existing saved drafts are not reclustered. The user's actual source set determines the topic count—there is no forced three-cluster result.
+4. Inspect a coherent topic's original evidence and concept matches; explain independent account count versus post count. For small/uneven samples explicitly say “历史数据不足，不能推断全平台趋势”.
+5. Compare the Top 3 score breakdowns and recommended editorial experiments. Brand/domain relevance is a reviewable hypothesis; confirm the provisional brand brief before making product claims.
+6. Generate three angles and an English draft, edit/save/approve, switch language without changing the draft, and export TXT. Open in X only prefills the composer; publication requires your own confirmation there.
+7. Only after a real manual publication, record its actual URL/time and enter observed performance metrics. Leave unavailable fields blank. Before publication, show the honest empty state; never enter test numbers as real results.
+
+The user's local ten real posts were not available in this environment. New paraphrase fixtures are test-only. Re-run the seven-day Manual Imports analysis locally to assess actual grouping; no numerical improvement on that private dataset is claimed.
+
+## Topic naming and shared discussion insight (small follow-up)
+
+`app/topic_quality.py` adds an evidence-conditioned **presentation layer** after clustering. It does not change cluster membership, opportunity scores, historical sufficiency checks or the existing canonical topic key used by publication/performance rollups.
+
+- Coding topics receive a more specific engineering/reliability name only when at least two technical concerns (feedback/recovery, testing/verification, context/token efficiency, execution harnesses/complex tasks) appear across a majority of selected posts. A concern isolated in one detailed post cannot rename a larger group. Majority-supported narrower concerns can instead produce context-, feedback-, test- or harness-specific names. These are reusable vocabulary rules, not rules keyed to particular accounts, products or the user's four posts.
+- A clear agent interoperability/communication-protocol discussion can receive a specific title even as a singleton. Generic “protocol” wording alone is insufficient. Unidentified singletons are **待确认的单帖信号 / Unconfirmed Single-Post Signal**; unclassified groups retain a provisional label and a lexical clue.
+- The detail view includes a bilingual **共同讨论洞察 / Shared Discussion Insight** of one or two sentences, with observed concerns, supporting handles and explicit coverage (for example, how many selected posts contain the concern). An expandable section retains the exact matched phrases and links the interpretation to the original source posts below. It is a local editorial reading, not an LLM claim, fact verification or industry consensus.
+- A discussion cluster is **not** automatically a rising trend. With insufficient history, momentum remains unknown, its score weight remains zero, and the UI explicitly says that velocity cannot be inferred. Real historical evidence is still required for the existing observed-sample calculation.
+
+No schema changes, source edits or record backfill. Old analyses/drafts/publications keep their saved text; run **手动导入 → 最近 7 天 → 分析信号** again to see new display names and insights. Existing post-topic associations keep their canonical key. Source text and English content drafts remain in their original language.
+
+Review branch: `feat/topic-insight-polish`. At implementation time PR #5 was still open and `main` lacked its bilingual/semantic functionality, so this branch carries those exact existing commits plus this small follow-up; it does not alter or merge PR #5. After updating your existing project checkout to this branch, restart normally without deleting `data/growth.db`. No paid API is needed. The private real-source dataset was not available here; regression fixtures are synthetic and test-only.

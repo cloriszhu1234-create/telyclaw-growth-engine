@@ -874,3 +874,14 @@ pre {
 .status.published {
   color: var(--green);
 }
+/* Language selection preserves the existing workspace layout. */
+.header-tools {display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#language-switch {display:flex;border:1px solid var(--border,#ddd);border-radius:8px;overflow:hidden;flex-shrink:0}
+#language-switch button {border:0;border-radius:0;background:transparent;padding:7px 10px;font:inherit;font-size:12px;cursor:pointer;color:inherit}
+#language-switch button[aria-pressed="true"] {background:#e8f4e9;color:#24633b;font-weight:700}
+html[lang="zh-CN"] h1 {letter-spacing:0;line-height:1.35}
+html[lang="zh-CN"] .toolbar {flex-wrap:wrap}
+html[lang="zh-CN"] .nav {white-space:nowrap}
+.topic-meta {flex-wrap:wrap}
+html[lang="zh-CN"] .factor {grid-template-columns:145px minmax(35px,1fr) 65px;line-height:1.5}
+@media(max-width:600px) {html[lang="zh-CN"] .factor {grid-template-columns:120px minmax(25px,1fr) 60px}}

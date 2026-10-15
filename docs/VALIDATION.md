@@ -1,6 +1,28 @@
 # Validation — 15 October 2026
 
-## Growth Intelligence and Content Execution — latest results
+## Topic naming and insight follow-up — latest results
+
+Branch: `feat/topic-insight-polish`. Main was still `405ee72`; this branch retains the exact unmerged PR #5 commits through `6f844a1` before the small follow-up. PR #5 is unchanged and no PR is merged automatically.
+
+- **117 pytest tests passed**, one existing FastAPI TestClient dependency deprecation warning (baseline: 106). Eleven new cases cover evidence-conditioned engineering names across different authors/group sizes, specific protocol singleton names, ambiguous singleton fallback, exact source-match provenance, minority-only concerns, narrower feedback naming without invented testing, preserved canonical topic keys, and identical membership/scores/velocity before versus after presentation refinement.
+- All **five browser workflow scripts passed**, including the expanded bilingual test with four explicitly synthetic coding discussions. It verifies engineering naming, cited Chinese/English insight switching, unavailable velocity, unchanged original text, retained edits, approval/export/composer, manual publication and Performance metrics. Existing Demo, Manual and mocked Live tests pass with no external calls.
+- All three JavaScript syntax checks, Python compilation and Git whitespace checks pass. Browser servers start successfully on isolated databases. Source/SQL/migration code, approval, publishing and performance implementation are unchanged.
+
+No real X/LLM requests, paid credits, source scraping or public publishing. The actual user-imported source texts were not available; descriptions were not presented as verbatim quotations. Private-dataset output should be checked with a new local analysis. These local naming/insight heuristics identify observed discussion concerns, not consensus, technical efficacy or rising velocity. Existing saved records are never renamed or backfilled.
+
+## Semantic topics and bilingual interface — previous results
+
+Branch: `feat/semantic-topics-bilingual-ui`, based on merged main `405ee72` (PRs #1–#4).
+
+- **106 pytest tests passed, one existing FastAPI TestClient dependency deprecation warning**. Baseline before editing: 96 passing tests. Ten new semantic tests cover paraphrases across five AI themes, generic-term non-merges, conflicting concrete concerns under a broad multi-agent label, case-insensitive account breadth, unknown metrics, evidence-driven cluster counts/order, and specific editorial fit.
+- Five browser scripts passed: original MVP, Manual Imports, mocked Live X, growth loop and bilingual workflow. All use isolated temporary databases. Chinese defaults, English round-trip persistence, untranslated source text (including a source literally equal to a UI key), preserved unsaved draft/import/publishing/metric values, duplicate error localization, human approval, export, encoded composer destination, publication and cumulative metrics are exercised.
+- Chinese desktop screenshots were inspected across all four pages; English desktop/mobile regressions remain covered. No horizontal page overflow or browser JavaScript errors in the completed runs. Syntax checks for all three JavaScript files, Python compilation and Git whitespace checks pass.
+- No schema changes or database migration; no existing source, draft, analysis, publication or measurement rows are rewritten. Language choice is browser-only. Existing SQLite restart/preservation tests pass.
+- Original X text, author handles, URLs, configured brand brief, generated angle ideas and draft/publication text are intentionally not translated. Domain labels and UI narratives are presentation translations. Unknown-domain keywords and developer API docs can remain English.
+
+No real X/LLM requests, paid credits, billing actions or automatic/public publishing. The user's private ten-post dataset is not present: actual improvement on those posts must be reviewed locally with a fresh analysis. The local vocabulary is an explainable heuristic, not embeddings, LLM clustering, statistical independence or platform-wide trend proof. Recruitment clarification/video remain outstanding.
+
+## Growth Intelligence and Content Execution — previous results
 
 Branch: `feat/growth-intelligence-loop`, based on merged main `920bfb8` (includes PRs #1–#3).
 

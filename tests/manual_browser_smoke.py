@@ -34,6 +34,7 @@ def run():
                         external.append(route.request.url);route.abort()
                 page.route('**/*',local_only)
                 page.on('pageerror',lambda error:errors.append(str(error)))
+                page.add_init_script("localStorage.setItem('telyclaw.language','en')")
                 page.goto('http://127.0.0.1:8003')
                 page.locator('.topic').first.wait_for()
                 page.locator('[data-tab="sources"]').click()
@@ -61,7 +62,7 @@ def run():
                 page.wait_for_function("document.getElementById('posts').textContent==='2'")
                 assert 'Too few' in page.locator('#sample-warning').inner_text()
                 assert page.locator('#accounts').inner_text()=='2'
-                page.locator('#detail details').evaluate('(element)=>element.open=true')
+                page.locator('#detail details').last.evaluate('(element)=>element.open=true')
                 assert page.locator('#detail a').first.get_attribute('href').startswith('https://x.com/')
                 assert 'N/A' in page.locator('#detail').inner_text()
                 output=ROOT/'work/browser';output.mkdir(parents=True,exist_ok=True)

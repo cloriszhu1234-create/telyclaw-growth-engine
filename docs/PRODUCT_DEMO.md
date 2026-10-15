@@ -1,3 +1,11 @@
+# 中文演示补充
+
+界面默认中文；右上角可切换 English，浏览器会保存选择。请在原项目目录运行新分支，保留 `data/growth.db`。完整中文演示步骤及本地运行命令见 README 的 “Mandarin interview walkthrough”。原始帖子、品牌简报和英文草稿保持原语言。
+
+重点展示：手动导入 → 最近 7 天重新分析 → 查看概念证据、独立账号数与来源原文 → 比较前三个内容机会 → 编辑／批准／导出 → 手动发布确认 → 真实效果衡量。不得预设三个聚类，不能将手选样本描述为全平台趋势。“历史数据不足”是诚实的数据边界；没有发布时展示空状态即可。
+
+下面保留上一轮的英文演示材料。
+
 # Growth decision loop — demonstration guide
 
 Use your existing manually imported posts, or explicitly labeled test/demo data. Never present fixtures as real X discussions or outcomes. No paid API access is necessary. Keep Live disabled.

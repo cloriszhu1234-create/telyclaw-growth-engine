@@ -1,3 +1,9 @@
+# Final core optimization round
+
+The latest round builds on merged `main` at `405ee72`; it preserves the prior growth loop and introduces no database migration. See README for the current formulas, local concept vocabulary, bilingual renderer, limitations and Mandarin demo walkthrough. Older design notes below describe the previous round and are historical where the clustering/ranking method changed.
+
+New files: `app/semantics.py` (specific domain concept patterns, readable bilingual labels and editorial experiments), `app/static/i18n.js` (presentation-only translation catalogue), `tests/test_semantic_topics.py` and `tests/bilingual_browser_smoke.py`. Updated: `app/trends.py`, existing HTML/JS/CSS and browser regression language setup, README and validation/demo documentation. No paid model, scraping, streaming or direct publishing is introduced. Existing source evidence, drafts and outcome records remain in their original language and storage format.
+
 # Final product optimization — review and acceptance map
 
 This extends the existing FastAPI + SQLite app on `feat/growth-intelligence-loop`. No rebuild, external API requirement, destructive migration or source-post replacement was introduced.
