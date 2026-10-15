@@ -2,7 +2,7 @@
 
 将选定 X 账号的讨论转化为有来源依据的内容机会，完成 **发现 → 理解 → 排序 → 创作 → 审批 → 手动发布 → 衡量 → 学习**。这是可本地运行的单用户 MVP，不依赖付费 API；中文界面默认开启，可切换 English。
 
-**提交版本：`feat/evidence-led-content`。** 此分支包含最近验证的修复；准备交付时 PR #7–#9 尚未合入 `main`，请使用此分支或指定提交的源码 ZIP。固定版本以下载链接中的 commit 为准；另行打包的快照附带 `SOURCE_VERSION.txt`。不要用交付包覆盖已有项目或 `data/growth.db`。
+**提交版本：`fix/single-post-topic-titles`。** 此分支包含最近验证的内容生成与单帖命名修复；准备交付时这些优化尚未全部合入 `main`，请使用此分支或指定提交的源码 ZIP。固定版本以下载链接中的 commit 为准。不要用交付包覆盖已有项目或 `data/growth.db`。
 
 ## 快速运行（macOS / Linux）
 
@@ -36,6 +36,8 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 对启用账号及所选时间窗口内的帖子去重、规范化，用领域同义词规则、TF-IDF 词组/字符相似度及平均链接聚类识别共同讨论，不预设话题数量。具体概念支持跨措辞匹配；泛化的 AI / agent / workflow 词本身不足以合并。系统生成主题名称、摘要和来源支持的共同洞察，保留原文、账号、时间、可用指标和链接供复核。
 
+单帖也有主题：明确的框架选择、工程管理提示词等线索生成具体名称；未能可靠归类时，标题用“原帖议题”加带引号的来源短摘录，不编造技术解释。“单一来源”和“历史数据不足”作为独立证据标签保留。此命名层不改变聚类、评分或已有记录。
+
 **话题聚合不等于上升趋势。** 只有当前和前一个等长窗口均具备足够帖子、独立账号和时间跨度时才计算样本内讨论量变化；否则显示“历史数据不足”。手选样本不代表全平台共识。
 
 ## Opportunity Ranking Logic｜机会排序逻辑
@@ -62,10 +64,10 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 ## Validation & Limitations｜验证与限制
 
-- 最近运行结果：**147 项 pytest 测试、6 组 Chromium 浏览器流程通过**，包含编辑/审批/导出、发布登记、指标更新与重启保留；有一条现存 TestClient 依赖弃用警告。测试使用隔离的测试数据，X / LLM 请求均为 mock，没有消耗付费额度。详见 [验证报告](docs/VALIDATION.md)。
+- 最近运行结果：**164 项 pytest 测试、7 组 Chromium 浏览器流程通过**，包含单帖中英文标题、编辑/审批/导出、发布登记、指标更新与重启保留；有一条现存 TestClient 依赖弃用警告。测试使用隔离的测试数据，X / LLM 请求均为 mock，没有消耗付费额度。详见 [验证报告](docs/VALIDATION.md)。
 - 聚类是英语领域规则辅助的本地方法，仍可能误分或漏分；模板可能重复，不能代替事实核查或人工判断。TelyClaw 实际定位需确认。
 - Live X 已实现官方 API 按需拉取、缓存与请求保护，**默认禁用、未验证真实权限/额度**；不是流式监控。生产监控还需正式授权/额度、分页、覆盖率及保留策略、任务调度和运维。自动发布、自动采集表现数据尚未实现。
 - 发布和指标为用户手动确认，未由 X API 核验；没有证明因果增长或 10× 结果。当前无登录、多租户或公网部署加固，适用于 localhost 演示。
 - **最终交付仍待：3–5 分钟演示视频，以及第 7 页被遮挡文字的招聘方确认。** 不推测缺失要求内容。
 
-完整配置、macOS 证书故障排查、算法公式与生产接入说明见 [TECHNICAL_GUIDE.md](TECHNICAL_GUIDE.md)。[源码分支](https://github.com/cloriszhu1234-create/telyclaw-growth-engine/tree/feat/evidence-led-content) 为私有仓库；向评审提交仓库链接前需授予其访问权限，或直接提交源码 ZIP。开发测试：安装 `requirements-dev.txt` 后运行 `python -m pytest -q`；浏览器测试命令见验证报告。
+完整配置、macOS 证书故障排查、算法公式与生产接入说明见 [TECHNICAL_GUIDE.md](TECHNICAL_GUIDE.md)。[源码分支](https://github.com/cloriszhu1234-create/telyclaw-growth-engine/tree/fix/single-post-topic-titles) 位于已公开的 GitHub 仓库；可提交分支链接或指定提交的源码 ZIP。开发测试：安装 `requirements-dev.txt` 后运行 `python -m pytest -q`；浏览器测试命令见验证报告。

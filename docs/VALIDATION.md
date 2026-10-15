@@ -1,6 +1,17 @@
 # Validation — 15 October 2026
 
-## Evidence-led angles and drafts — latest results
+## Descriptive single-post subjects — latest results
+
+Branch: `fix/single-post-topic-titles`, retaining the previously reviewed content and page-banner fixes. Runtime changes are limited to `app/topic_quality.py` and the translation dictionary `app/static/i18n.js`. No migration, record backfill, source edits, clustering/relevance rules or scoring/ranking changes.
+
+- **164 pytest tests passed**, with the existing TestClient dependency deprecation warning. Seventeen new cases cover source-specific singleton titles, narrower framework selection without invented protocols, engineering-lead/general prompt subjects, generic quoted fallback, bounded excerpts, excluded handles/URLs, distant unrelated terms, and unchanged membership/score/weights/rank/canonical rollup keys. Existing ambiguous-singleton tests now check descriptive subjects with weak evidence explicitly retained.
+- **All seven browser scripts passed**: the original six plus `python tests/singleton_browser_smoke.py`. The new script verifies Chinese/English subject names, source-excerpt fallback, independent single-source/history labels, unchanged visible raw evidence, content creation, editing/approval/TXT export, saved-draft reload, mobile layout and zero external requests. Chinese desktop cards were visually inspected with test-only fixtures.
+- The full API regression retains published-text locking, immutable approval/export, metric updates/history/restart, mode separation and no automatic live fetch. Existing stored titles are not rewritten by startup or language switching; new analysis applies the current naming layer.
+- JavaScript syntax checks for all three scripts, Python compilation and `git diff --check` passed. Browser servers started successfully on isolated temporary SQLite databases. No actual user database was available, opened or changed.
+
+The naming layer identifies a subject, not independent confirmation, technical truth, measured benefit or accelerating discussion. A source-excerpt fallback deliberately preserves original-language text rather than inventing a Chinese technical label. Actual full local post output still requires local reanalysis. All X/LLM tests use mocks or disabled providers; no paid requests, scraping or automatic publication.
+
+## Evidence-led angles and drafts — previous results
 
 Branch: `feat/evidence-led-content`, preserving pending PR #7/#8 commits on top of main `1e6b0f1`. No PR is merged automatically. This round changes only `app/content.py` at runtime, with no new packages, schema changes or record backfill.
 
