@@ -1,6 +1,27 @@
 # Validation — 15 October 2026
 
-## Topic naming and insight follow-up — latest results
+## Page-specific source banner — latest results
+
+Branch: `fix/page-provenance-banner`. Main remains `1e6b0f1`; the branch carries the exact pending PR #7 commit `6425d2b` to preserve the already-validated context correction. No existing PR is modified or automatically merged.
+
+- **129 pytest tests passed**, one existing TestClient dependency deprecation warning. All **six browser scripts passed**, including the new focused provenance regression.
+- New coverage reproduces the stale Demo notice on Performance after page reload and tests all four radar modes, an empty Content Studio, manual versus demo draft selection, mixed-source publication lists, Chinese/English switching, preserved unsaved edits, and unchanged publication/metric payloads. Two test-only cumulative snapshots (2 then 3 views) still total 3; source-mode labels remain attached to each record. No X requests or external navigation occur.
+- All three JavaScript syntax checks, Python compilation and Git whitespace checks pass. Chinese Performance layout was visually inspected using labeled test-only records.
+- Runtime changes are limited to `app/static/app.js` and `app/static/i18n.js`; database schema, stored imports/drafts/publications/measurements, generation, approval, export, scoring and API adapters are unchanged. Existing tests still verify persistence and the full growth loop.
+
+The Performance banner describes user-confirmed publishing and manual metrics without claiming every record is real or API-verified. Demo-derived and imported publications can coexist; the notice does not filter them or rewrite their provenance. Private-repository downloads must use an authenticated browser, not anonymous raw URLs. Existing deployment/authentication, metric verification, provisional brand positioning, content-template quality and submission limitations remain.
+
+## Context/tool-output evidence correction — previous results
+
+Branch: `fix/context-efficiency-evidence`, based on main `1e6b0f1` after PR #6 was merged.
+
+- **129 pytest tests passed**, one existing TestClient dependency deprecation warning (baseline: 117). Twelve additional cases cover the user-supplied tool-output/compaction source excerpt, generic wording variants, source-match provenance, unverified-number exclusion from insights, unavailable momentum and negative controls for unrelated compaction, tool output and authentication tokens.
+- All five browser scripts passed. The bilingual fixture now exercises tool output and compaction rather than the already-covered literal “context compression”; the four-source insight lists all four sources in both languages with inspectable context matches. Approval, export, publication and Performance regression flows pass on isolated databases.
+- Python compilation, JavaScript syntax checks and Git whitespace checks pass. No real X/LLM requests, paid credits, scraping, automatic publishing or changes to user SQLite data.
+
+The regression combines relevant excerpts pasted by the user; claims about savings/organizational adoption are not verified. Other private source texts were not supplied, so no new claim is made about the entire local dataset. Classification remains a local vocabulary heuristic; this correction changes presentation evidence only, not historical sufficiency, membership, score factors or canonical topic identity.
+
+## Topic naming and insight follow-up — previous results
 
 Branch: `feat/topic-insight-polish`. Main was still `405ee72`; this branch retains the exact unmerged PR #5 commits through `6f844a1` before the small follow-up. PR #5 is unchanged and no PR is merged automatically.
 
