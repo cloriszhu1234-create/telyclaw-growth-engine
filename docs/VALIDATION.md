@@ -1,6 +1,16 @@
 # Validation — 15 October 2026
 
-## Topic naming and insight follow-up — latest results
+## Context/tool-output evidence correction — latest results
+
+Branch: `fix/context-efficiency-evidence`, based on main `1e6b0f1` after PR #6 was merged.
+
+- **129 pytest tests passed**, one existing TestClient dependency deprecation warning (baseline: 117). Twelve additional cases cover the user-supplied tool-output/compaction source excerpt, generic wording variants, source-match provenance, unverified-number exclusion from insights, unavailable momentum and negative controls for unrelated compaction, tool output and authentication tokens.
+- All five browser scripts passed. The bilingual fixture now exercises tool output and compaction rather than the already-covered literal “context compression”; the four-source insight lists all four sources in both languages with inspectable context matches. Approval, export, publication and Performance regression flows pass on isolated databases.
+- Python compilation, JavaScript syntax checks and Git whitespace checks pass. No real X/LLM requests, paid credits, scraping, automatic publishing or changes to user SQLite data.
+
+The regression combines relevant excerpts pasted by the user; claims about savings/organizational adoption are not verified. Other private source texts were not supplied, so no new claim is made about the entire local dataset. Classification remains a local vocabulary heuristic; this correction changes presentation evidence only, not historical sufficiency, membership, score factors or canonical topic identity.
+
+## Topic naming and insight follow-up — previous results
 
 Branch: `feat/topic-insight-polish`. Main was still `405ee72`; this branch retains the exact unmerged PR #5 commits through `6f844a1` before the small follow-up. PR #5 is unchanged and no PR is merged automatically.
 
