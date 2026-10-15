@@ -326,3 +326,16 @@ If your environment folder has another name, activate that environment instead. 
 7. Only after a real manual publication, record its actual URL/time and enter observed performance metrics. Leave unavailable fields blank. Before publication, show the honest empty state; never enter test numbers as real results.
 
 The user's local ten real posts were not available in this environment. New paraphrase fixtures are test-only. Re-run the seven-day Manual Imports analysis locally to assess actual grouping; no numerical improvement on that private dataset is claimed.
+
+## Topic naming and shared discussion insight (small follow-up)
+
+`app/topic_quality.py` adds an evidence-conditioned **presentation layer** after clustering. It does not change cluster membership, opportunity scores, historical sufficiency checks or the existing canonical topic key used by publication/performance rollups.
+
+- Coding topics receive a more specific engineering/reliability name only when at least two technical concerns (feedback/recovery, testing/verification, context/token efficiency, execution harnesses/complex tasks) appear across a majority of selected posts. A concern isolated in one detailed post cannot rename a larger group. Majority-supported narrower concerns can instead produce context-, feedback-, test- or harness-specific names. These are reusable vocabulary rules, not rules keyed to particular accounts, products or the user's four posts.
+- A clear agent interoperability/communication-protocol discussion can receive a specific title even as a singleton. Generic “protocol” wording alone is insufficient. Unidentified singletons are **待确认的单帖信号 / Unconfirmed Single-Post Signal**; unclassified groups retain a provisional label and a lexical clue.
+- The detail view includes a bilingual **共同讨论洞察 / Shared Discussion Insight** of one or two sentences, with observed concerns, supporting handles and explicit coverage (for example, how many selected posts contain the concern). An expandable section retains the exact matched phrases and links the interpretation to the original source posts below. It is a local editorial reading, not an LLM claim, fact verification or industry consensus.
+- A discussion cluster is **not** automatically a rising trend. With insufficient history, momentum remains unknown, its score weight remains zero, and the UI explicitly says that velocity cannot be inferred. Real historical evidence is still required for the existing observed-sample calculation.
+
+No schema changes, source edits or record backfill. Old analyses/drafts/publications keep their saved text; run **手动导入 → 最近 7 天 → 分析信号** again to see new display names and insights. Existing post-topic associations keep their canonical key. Source text and English content drafts remain in their original language.
+
+Review branch: `feat/topic-insight-polish`. At implementation time PR #5 was still open and `main` lacked its bilingual/semantic functionality, so this branch carries those exact existing commits plus this small follow-up; it does not alter or merge PR #5. After updating your existing project checkout to this branch, restart normally without deleting `data/growth.db`. No paid API is needed. The private real-source dataset was not available here; regression fixtures are synthetic and test-only.
