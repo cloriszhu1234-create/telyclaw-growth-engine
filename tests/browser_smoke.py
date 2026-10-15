@@ -26,6 +26,7 @@ with tempfile.TemporaryDirectory() as directory:
             page=browser.new_page(viewport={'width':1440,'height':1100},device_scale_factor=1)
             errors=[]
             page.on('pageerror',lambda error:errors.append(str(error)))
+            page.add_init_script("localStorage.setItem('telyclaw.language','en')")
             page.goto('http://127.0.0.1:8001')
             page.locator('.topic').first.wait_for()
             assert int(page.locator('#posts').inner_text())>0

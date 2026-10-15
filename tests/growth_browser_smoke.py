@@ -35,6 +35,7 @@ def run():
                 context.route('**/*',local_only)
                 page=context.new_page();page.on('pageerror',lambda error:errors.append(str(error)))
                 page.set_default_timeout(8000);page.set_default_navigation_timeout(8000)
+                page.add_init_script("localStorage.setItem('telyclaw.language','en')")
                 page.goto(base)
                 page.locator('.topic').first.wait_for()
                 page.locator('[data-tab="performance"]').click()

@@ -73,7 +73,7 @@ async function refresh() {
     state.accounts
       .map(
         (a) =>
-          `<div class="account-row"><input type="checkbox" aria-label="Monitor ${e(a.handle)}" data-handle="${e(a.handle)}" ${a.enabled ? "checked" : ""}><span>@${e(a.handle)}</span><button data-remove="${e(a.handle)}">Remove</button></div>`,
+          `<div class="account-row"><input type="checkbox" aria-label="Monitor ${e(a.handle)}" data-handle="${e(a.handle)}" ${a.enabled ? "checked" : ""}><span data-raw>@${e(a.handle)}</span><button data-remove="${e(a.handle)}">Remove</button></div>`,
       )
       .join("") || "<p>No accounts. Add an account to begin.</p>";
   $("account-list")
@@ -250,7 +250,7 @@ $("analyze").onclick = async () => {
       analysis.topics
         .map(
           (t) =>
-            `<button class="topic" data-topic="${e(t.id)}"><div class="topic-top"><span>${t.top ? "↗ TOP " + t.rank : "SIGNAL " + t.rank}${!t.recommended ? " · LOW RELEVANCE" : ""}</span><span class="score">${t.score}<small> / 100</small></span></div><h3>${e(t.title)}</h3><p>${e(t.summary)}</p><div class="topic-meta"><span>◎ ${t.authors.length} accounts</span><span>▤ ${t.evidence.length} unique posts</span><span>${t.available_engagement ?? "Not measured"} available engagement${t.metrics_complete ? "" : " (partial)"}</span><span>${t.momentum === null ? "Insufficient historical data" : (t.momentum > 0 ? "+" : "") + t.momentum + "% observed change"}</span></div></button>`,
+            `<button class="topic" data-topic="${e(t.id)}"><div class="topic-top"><span>${t.top ? "↗ TOP " + t.rank : "SIGNAL " + t.rank}${!t.recommended ? " · LOW RELEVANCE" : ""}</span><span class="score">${t.score}<small> / 100</small></span></div><h3>${e(t.title)}</h3><p>${e(t.summary)}</p><div class="topic-meta"><span>◎ ${t.authors.length} accounts</span><span>${t.authors.length>1?"Multi-source confirmation":"Single-source signal"}</span><span>▤ ${t.evidence.length} unique posts</span><span>${t.available_engagement ?? "Not measured"} available engagement${t.metrics_complete ? "" : " (partial)"}</span><span>${t.momentum === null ? "Insufficient historical data" : (t.momentum > 0 ? "+" : "") + t.momentum + "% observed change"}</span></div></button>`,
         )
         .join("") ||
       '<div class="empty">No eligible posts in this window. For Live X, fetch manually when access is enabled, then analyze the cache. Otherwise enable accounts, choose a wider window, or import recent data.</div>';
@@ -296,7 +296,7 @@ function evidenceHTML(p) {
       : p.provenance === "manual_x"
         ? "Manual · unverified"
         : p.provenance;
-  return `<div class="evidence"><strong>@${e(p.handle)}${p.provenance === "live_x" ? " timeline" : ""}</strong> <span class="tag">${e(flags)}</span><p>${e(p.text)}</p><small>${e(dateLabel(p.created_at))} · ${p.likes ?? "N/A"} likes · ${p.reposts ?? "N/A"} reposts · ${p.replies ?? "N/A"} replies · ${e(p.provenance)}</small>${link ? `<div class="source-links"><a href="${e(link)}" target="_blank" rel="noopener noreferrer">Original X post ↗</a></div>` : ""}</div>`;
+  return `<div class="evidence"><strong><span data-raw>@${e(p.handle)}</span>${p.provenance === "live_x" ? " timeline" : ""}</strong> <span class="tag">${e(flags)}</span><p data-raw>${e(p.text)}</p><small>${e(dateLabel(p.created_at))} · ${p.likes ?? "N/A"} likes · ${p.reposts ?? "N/A"} reposts · ${p.replies ?? "N/A"} replies · ${e(p.provenance)}</small>${link ? `<div class="source-links"><a href="${e(link)}" target="_blank" rel="noopener noreferrer">Original X post ↗</a></div>` : ""}</div>`;
 }
 function selectTopic(id) {
   const t = analysis.topics.find((t) => t.id === id);
@@ -304,7 +304,7 @@ function selectTopic(id) {
     .querySelectorAll(".topic")
     .forEach((b) => b.classList.toggle("selected", b.dataset.topic === id));
   $("detail").innerHTML =
-    `<div class="detail-label">OPPORTUNITY BRIEF · ${analysis.mode === "demo" ? "SYNTHETIC EVIDENCE" : analysis.mode === "live" ? "LIVE X CACHE" : analysis.mode === "manual" ? "MANUAL · UNVERIFIED" : "JSON IMPORTS"}</div><h2>${e(t.title)}</h2><div class="summary">${e(t.summary)}<br><small class="subtle">${e(t.summary_method)}</small></div><h4>Why It’s Trending</h4><p>${e(t.why_trending || t.reason)}</p><h4>Why TelyClaw Should Care</h4><p>${e(t.why_care || "Review the configured brand brief.")}</p><h4>Recommended Content Move</h4><p>${e(t.content_move || "Review source evidence before drafting.")}</p>${analysis.source_warning ? `<p class="source-warning">${e(analysis.source_warning)}</p>` : ""}<h4>Opportunity score <span class="tag">${t.score} / 100</span></h4>${Object.entries(
+    `<div class="detail-label">OPPORTUNITY BRIEF · ${analysis.mode === "demo" ? "SYNTHETIC EVIDENCE" : analysis.mode === "live" ? "LIVE X CACHE" : analysis.mode === "manual" ? "MANUAL · UNVERIFIED" : "JSON IMPORTS"}</div><h2>${e(t.title)}</h2><div class="summary">${e(t.summary)}<br><small class="subtle">${e(t.summary_method)}</small></div><h4>Why It’s Trending</h4><p>${e(t.why_trending || t.reason)}</p><h4>Why TelyClaw Should Care</h4><p>Relevance inputs: ${e(t.relevance_evidence?.specific_keywords.join(", ")||"No specific brand keyword matched")} · ${t.relevance_evidence?.domain_fit?"Specific domain fit is an editorial assumption; validate against your brand brief.":"No domain-fit credit applied."}</p><p>${e(t.why_care || "Review the configured brand brief.")}</p><h4>Recommended Content Move</h4><p>${e(t.editorial_move||"")}</p><p>${e(t.content_move || "Review source evidence before drafting.")}</p>${analysis.source_warning ? `<p class="source-warning">${e(analysis.source_warning)}</p>` : ""}<p class="subtle">Independent confirmation is limited to the selected accounts, not the X platform.</p><h4>Opportunity score <span class="tag">${t.score} / 100</span></h4>${Object.entries(
       t.factors,
     )
       .map(
@@ -313,7 +313,7 @@ function selectTopic(id) {
       )
       .join(
         "",
-      )}<p class="subtle">Weighted heuristic, not a prediction. Relevance uses your brand keywords. Available source engagement = observed likes + reposts + replies. Quality scoring is damped for single-account signals. Unknown factors have zero weight; remaining weights rescale.</p><details><summary>Inspect ${t.evidence.length} source posts & methodology</summary><p>Local synonym normalization, word/phrase + character similarity, exact-text deduplication and multi-document summaries. Summaries use all documents for theme extraction, with attributed excerpts. Previous equal window: ${t.prior_count} matching posts. Similarity may merge or split topics incorrectly.</p>${t.evidence.map(evidenceHTML).join("")}</details><button class="primary" id="generate">Create angles & draft →</button><p class="subtle">Local editorial templates by default; optional OpenAI configuration. Human approval required.</p>`;
+      )}<p class="subtle">Content opportunity is a heuristic based on independent account breadth and specific concept diversity, not a prediction of originality.</p><p class="subtle">Weighted heuristic, not a prediction. Relevance uses specific brand keywords and supported domain concepts; generic AI/agent mentions alone earn only limited credit. Available source engagement = observed likes + reposts + replies. Quality scoring is damped for single-account signals. Unknown factors have zero weight; remaining weights rescale.</p><details><summary>Concept evidence & clustering method</summary><p>${e(t.clustering_method)}</p>${(t.concept_evidence||[]).map(c=>`<p data-raw>${e((t.evidence.find(p=>p.id===c.post_id)||{}).handle||c.post_id)}: ${e(Object.values(c.concepts).flat().join(", "))}</p>`).join("") || "<p>No specific domain concept detected; conservative lexical grouping.</p>"}</details><details><summary>Inspect ${t.evidence.length} source posts & methodology</summary><p>Local synonym normalization, word/phrase + character similarity, exact-text deduplication and multi-document summaries. Summaries use all documents for theme extraction, with attributed excerpts. Previous equal window: ${t.prior_count} matching posts. Similarity may merge or split topics incorrectly.</p>${t.evidence.map(evidenceHTML).join("")}</details><button class="primary" id="generate">Create angles & draft →</button><p class="subtle">Local editorial templates by default; optional OpenAI configuration. Human approval required.</p>`;
   $("generate").onclick = async () => {
     $("generate").disabled = true;
     $("generate").textContent = "Preparing draft…";
@@ -350,7 +350,7 @@ function renderDrafts() {
     .forEach(
       (b) =>
         (b.onclick = () => {
-          if (dirty && !confirm("Discard unsaved draft edits?")) return;
+          if (dirty && !confirm(tr("Discard unsaved draft edits?"))) return;
           currentDraft = state.drafts.find((d) => d.id === b.dataset.draft);
           renderEditor();
         }),
@@ -375,7 +375,7 @@ function renderEditor() {
       )
       .join(
         "",
-      )}<h4>Three ways into the conversation</h4>${d.angles.map((a) => `<div class="angle"><strong>${e(a.type)}</strong><p>${e(a.idea)}</p></div>`).join("")}<label for="draft-text">Your X post</label><textarea id="draft-text" rows="6" maxlength="280">${e(d.text)}</textarea><div class="editor-tools"><span id="save-state">Saved · ${d.approved_at ? "Approved " + e(dateLabel(d.approved_at)) : "Review claims and positioning before approval"}</span><span id="char-count">${d.text.length} / 280</span></div><p>Draft suggestions are labeled by provider and are not verified TelyClaw product claims. Check the source, add your expertise, and confirm the angle fits your audience. MVP export supports ASCII text without URLs.</p><div class="actions"><button class="secondary" id="save-draft">Save changes</button><button class="primary" id="approve-draft">Approve post</button><a class="secondary ${!["approved", "published"].includes(d.status) ? "hidden" : ""}" id="export-draft" href="/api/drafts/${e(d.id)}/export">Export approved text ↗</a></div><p class="subtle">Export downloads text for manual publishing. Nothing is posted to X by this application. Editing approved text requires approval again.</p>`;
+      )}<h4>Three ways into the conversation</h4>${d.angles.map((a) => `<div class="angle"><strong>${e(a.type)}</strong><p data-raw>${e(a.idea)}</p></div>`).join("")}<label for="draft-text">Your X post</label><textarea id="draft-text" rows="6" maxlength="280">${e(d.text)}</textarea><div class="editor-tools"><span id="save-state">Saved · ${d.approved_at ? "Approved " + e(dateLabel(d.approved_at)) : "Review claims and positioning before approval"}</span><span id="char-count">${d.text.length} / 280</span></div><p>Draft suggestions are labeled by provider and are not verified TelyClaw product claims. Check the source, add your expertise, and confirm the angle fits your audience. MVP export supports ASCII text without URLs.</p><div class="actions"><button class="secondary" id="save-draft">Save changes</button><button class="primary" id="approve-draft">Approve post</button><a class="secondary ${!["approved", "published"].includes(d.status) ? "hidden" : ""}" id="export-draft" href="/api/drafts/${e(d.id)}/export">Export approved text ↗</a></div><p class="subtle">Export downloads text for manual publishing. Nothing is posted to X by this application. Editing approved text requires approval again.</p>`;
   if (d.status === "published") {
     $("draft-text").readOnly = true;
     $("save-draft").disabled = true;
@@ -556,3 +556,13 @@ window.addEventListener("beforeunload", (event) => {
 refresh()
   .then(() => $("analyze").click())
   .catch((err) => toast("Could not load workspace: " + err.message, true));
+
+// Native constraints are validated locally; custom copy follows the interface language.
+document.addEventListener('invalid',event=>{
+  const field=event.target;field.setCustomValidity('');
+  if(uiLanguage==='zh'&&!field.validity.valid){
+    const v=field.validity;
+    field.setCustomValidity(v.valueMissing?'请填写此字段。':v.typeMismatch?'请输入有效的链接或数值。':v.rangeUnderflow?'数值低于允许的最小值。':v.rangeOverflow?'数值超过允许的最大值。':v.stepMismatch?'请输入有效的整数。':'请按要求的格式填写。');
+  }
+},true);
+document.addEventListener('input',event=>event.target.setCustomValidity?.(''));

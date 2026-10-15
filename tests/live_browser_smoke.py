@@ -60,6 +60,7 @@ def run():
                 page.route('**/*',lambda route:route.continue_() if route.request.url.startswith('http://127.0.0.1:8002/') else route.abort())
                 errors=[]
                 page.on('pageerror',lambda error:errors.append(str(error)))
+                page.add_init_script("localStorage.setItem('telyclaw.language','en')")
                 page.goto('http://127.0.0.1:8002')
                 page.locator('.topic').first.wait_for()
                 assert page.locator('#mode').input_value()=='demo'
@@ -77,7 +78,7 @@ def run():
                 page.locator('.topic').first.wait_for()
                 assert page.locator('#posts').inner_text()=='3'
                 assert 'not a platform-wide trend' in page.locator('#detail').inner_text()
-                page.locator('#detail details').evaluate('(element)=>element.open=true')
+                page.locator('#detail details').last.evaluate('(element)=>element.open=true')
                 assert page.locator('#detail a').first.get_attribute('href').startswith('https://x.com/elonmusk/status/')
                 assert 'N/A' in page.locator('#detail').inner_text()
                 page.locator('#generate').click()
