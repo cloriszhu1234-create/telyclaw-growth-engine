@@ -1,6 +1,51 @@
 # Validation — 15 October 2026
 
-## Topic naming and insight follow-up — latest results
+## Descriptive single-post subjects — latest results
+
+Branch: `fix/single-post-topic-titles`, retaining the previously reviewed content and page-banner fixes. Runtime changes are limited to `app/topic_quality.py` and the translation dictionary `app/static/i18n.js`. No migration, record backfill, source edits, clustering/relevance rules or scoring/ranking changes.
+
+- **164 pytest tests passed**, with the existing TestClient dependency deprecation warning. Seventeen new cases cover source-specific singleton titles, narrower framework selection without invented protocols, engineering-lead/general prompt subjects, generic quoted fallback, bounded excerpts, excluded handles/URLs, distant unrelated terms, and unchanged membership/score/weights/rank/canonical rollup keys. Existing ambiguous-singleton tests now check descriptive subjects with weak evidence explicitly retained.
+- **All seven browser scripts passed**: the original six plus `python tests/singleton_browser_smoke.py`. The new script verifies Chinese/English subject names, source-excerpt fallback, independent single-source/history labels, unchanged visible raw evidence, content creation, editing/approval/TXT export, saved-draft reload, mobile layout and zero external requests. Chinese desktop cards were visually inspected with test-only fixtures.
+- The full API regression retains published-text locking, immutable approval/export, metric updates/history/restart, mode separation and no automatic live fetch. Existing stored titles are not rewritten by startup or language switching; new analysis applies the current naming layer.
+- JavaScript syntax checks for all three scripts, Python compilation and `git diff --check` passed. Browser servers started successfully on isolated temporary SQLite databases. No actual user database was available, opened or changed.
+
+The naming layer identifies a subject, not independent confirmation, technical truth, measured benefit or accelerating discussion. A source-excerpt fallback deliberately preserves original-language text rather than inventing a Chinese technical label. Actual full local post output still requires local reanalysis. All X/LLM tests use mocks or disabled providers; no paid requests, scraping or automatic publication.
+
+## Evidence-led angles and drafts — previous results
+
+Branch: `feat/evidence-led-content`, preserving pending PR #7/#8 commits on top of main `1e6b0f1`. No PR is merged automatically. This round changes only `app/content.py` at runtime, with no new packages, schema changes or record backfill.
+
+- **147 pytest tests passed**, with the same existing TestClient dependency deprecation warning. The 18 new cases cover four-source coding concerns/attribution, distinct editorial purposes, narrower singleton concerns, seven other domain recipes, one-account breadth, old snapshots without insight fields, order reproducibility, unknown signals, long Chinese titles/custom briefs, source instruction text treated as data, mocked LLM outline/attribution, and a new-draft-versus-published-history preservation test.
+- **All six browser scripts passed**: original MVP, manual import, mocked Live X, growth loop, bilingual UI and provenance. The growth test additionally checks the actual generated three-angle output, an original ASCII draft within 280 characters, source clues, proposed product perspective and absence of arbitrary `versus` comparisons before continuing through edit/approval, intercepted composer, manual publication, TXT export and measurement updates. No browser JavaScript errors were observed; English desktop content layout was visually inspected.
+- The preservation test imports synthetic fixtures into a temporary SQLite database, publishes an edited test draft, records a test-only 3-view snapshot, then generates a separate new draft. It checks unchanged source/publication/performance payloads and unchanged approved TXT across restart. No user/local database is opened or rewritten by these tests.
+- All three JavaScript syntax checks, Python compilation and `git diff --check` passed. Uvicorn started successfully for the browser workflows.
+
+Commands: `python -m pytest -q`; `python tests/browser_smoke.py`; `python tests/manual_browser_smoke.py`; `python tests/live_browser_smoke.py`; `python tests/growth_browser_smoke.py`; `python tests/bilingual_browser_smoke.py`; `python tests/provenance_browser_smoke.py`; `node --check` for each of `app.js`, `i18n.js`, `performance.js`; `python -m compileall -q app`; `git diff --check`. In this cloud executor pytest uses the already-installed local test dependencies through `PYTHONPATH=/workspace/work/test-deps:$PYTHONPATH`; no runtime dependency changes were made.
+
+No real X or LLM calls, paid credits, scraping, billing actions or public publishing. Local generation remains labeled deterministic English editorial templates, not an LLM or fact verification. Same-concern clusters can yield similar suggestions. Source claims are not verified; editorial tests are proposals, not measured benefits or product capabilities. Human review remains required. The user's complete private source set and a human editorial acceptance study were not available here; review new drafts locally. Recruiter clarification, verified positioning and the final demo video remain outstanding.
+
+## Page-specific source banner — previous results
+
+Branch: `fix/page-provenance-banner`. Main remains `1e6b0f1`; the branch carries the exact pending PR #7 commit `6425d2b` to preserve the already-validated context correction. No existing PR is modified or automatically merged.
+
+- **129 pytest tests passed**, one existing TestClient dependency deprecation warning. All **six browser scripts passed**, including the new focused provenance regression.
+- New coverage reproduces the stale Demo notice on Performance after page reload and tests all four radar modes, an empty Content Studio, manual versus demo draft selection, mixed-source publication lists, Chinese/English switching, preserved unsaved edits, and unchanged publication/metric payloads. Two test-only cumulative snapshots (2 then 3 views) still total 3; source-mode labels remain attached to each record. No X requests or external navigation occur.
+- All three JavaScript syntax checks, Python compilation and Git whitespace checks pass. Chinese Performance layout was visually inspected using labeled test-only records.
+- Runtime changes are limited to `app/static/app.js` and `app/static/i18n.js`; database schema, stored imports/drafts/publications/measurements, generation, approval, export, scoring and API adapters are unchanged. Existing tests still verify persistence and the full growth loop.
+
+The Performance banner describes user-confirmed publishing and manual metrics without claiming every record is real or API-verified. Demo-derived and imported publications can coexist; the notice does not filter them or rewrite their provenance. Private-repository downloads must use an authenticated browser, not anonymous raw URLs. Existing deployment/authentication, metric verification, provisional brand positioning, content-template quality and submission limitations remain.
+
+## Context/tool-output evidence correction — previous results
+
+Branch: `fix/context-efficiency-evidence`, based on main `1e6b0f1` after PR #6 was merged.
+
+- **129 pytest tests passed**, one existing TestClient dependency deprecation warning (baseline: 117). Twelve additional cases cover the user-supplied tool-output/compaction source excerpt, generic wording variants, source-match provenance, unverified-number exclusion from insights, unavailable momentum and negative controls for unrelated compaction, tool output and authentication tokens.
+- All five browser scripts passed. The bilingual fixture now exercises tool output and compaction rather than the already-covered literal “context compression”; the four-source insight lists all four sources in both languages with inspectable context matches. Approval, export, publication and Performance regression flows pass on isolated databases.
+- Python compilation, JavaScript syntax checks and Git whitespace checks pass. No real X/LLM requests, paid credits, scraping, automatic publishing or changes to user SQLite data.
+
+The regression combines relevant excerpts pasted by the user; claims about savings/organizational adoption are not verified. Other private source texts were not supplied, so no new claim is made about the entire local dataset. Classification remains a local vocabulary heuristic; this correction changes presentation evidence only, not historical sufficiency, membership, score factors or canonical topic identity.
+
+## Topic naming and insight follow-up — previous results
 
 Branch: `feat/topic-insight-polish`. Main was still `405ee72`; this branch retains the exact unmerged PR #5 commits through `6f844a1` before the small follow-up. PR #5 is unchanged and no PR is merged automatically.
 

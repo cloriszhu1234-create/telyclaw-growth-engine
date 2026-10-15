@@ -62,17 +62,17 @@ def test_clear_protocol_singleton_is_named_and_remains_a_single_signal(text):
     assert t['momentum'] is None
 
 
-@pytest.mark.parametrize('text',[
-    'Protocol updates are coming soon; more information next week.',
-    'Network protocol transport uses encrypted packets between services.',
-    'AI agents are interesting and surprisingly different.',
+@pytest.mark.parametrize('text,title',[
+    ('Protocol updates are coming soon; more information next week.', 'Protocol Updates'),
+    ('Network protocol transport uses encrypted packets between services.', 'Network Protocols & Data Transport'),
+    ('AI agents are interesting and surprisingly different.', 'AI Agent Discussion'),
 ])
-def test_ambiguous_singletons_stay_unconfirmed(text):
+def test_singletons_have_descriptive_subjects_without_claiming_confirmation(text,title):
     t=detect([post(text,0)],[],NOW,4,DEFAULT_BRIEF)[0]
-    assert t['title']=='Unconfirmed Single-Post Signal'
-    assert t['theme_labels']['zh']=='待确认的单帖信号'
-    assert t['insight_support']==[]
-    assert '待确认' in t['shared_insight']['zh']
+    assert t['title']==title
+    assert t['confirmation']=='single_source'
+    assert t['momentum'] is None and t['weights']['momentum']==0
+    assert '不代表独立来源支持' in t['shared_insight']['zh']
 
 
 def test_one_detailed_post_cannot_supply_a_group_wide_engineering_claim():
@@ -98,3 +98,54 @@ def test_presentation_does_not_change_membership_scores_or_momentum(monkeypatch)
     original=detect(rows,[],NOW,4,DEFAULT_BRIEF)[0]
     for key in ['evidence','authors','score','factors','weights','momentum','momentum_status','topic_key']:
         assert current[key]==original[key]
+
+
+# Relevant user-supplied source excerpts. Claims (including 98%) are unverified;
+# this is an isolated regression fixture, never demo data or a live fetch.
+CONTEXT_OUTPUT_EXCERPT = (
+    'Someone built a plugin that cuts up to 98% of the tokens your coding agent burns on tool output. '
+    'Normally every log, snapshot and API response lands in your agent’s context. '
+    'Context Mode runs them in a sandbox and passes on only the result. '
+    'It also logs your session, so after compaction the agent finds what it needs instead of starting blind.'
+)
+
+
+def test_tool_output_compaction_source_contributes_to_shared_insight():
+    rows=[post(t,i) for i,t in enumerate(CODING_DISCUSSIONS)]
+    rows[2]['text']=CONTEXT_OUTPUT_EXCERPT
+    before=copy.deepcopy(rows)
+    t=detect(rows,[],NOW,168,DEFAULT_BRIEF)[0]
+    assert len(t['evidence'])==4
+    assert '4 of 4' in t['shared_insight']['en']
+    assert '所选 4 条帖子中，4 条' in t['shared_insight']['zh']
+    concern=next(c for c in t['insight_support'] if c['facet']=='context')
+    assert concern['sources']==[{'post_id':'2','handle':'fixture_2','matches':['compaction','tool output']}]
+    assert all(match in rows[2]['text'].lower() for match in concern['sources'][0]['matches'])
+    assert all('98' not in text for text in t['shared_insight'].values())
+    assert t['momentum'] is None and t['weights']['momentum']==0
+    assert rows==before
+
+
+@pytest.mark.parametrize('text,expected',[
+    ('A coding agent filters tool output before it enters context.', 'tool output'),
+    ('The assistant preserves context after compaction.', 'compaction'),
+    ('A coding assistant compresses tool outputs for the context window.', 'tool outputs'),
+    ('A coding agent reduces context with tool-output filtering.', 'tool-output'),
+    ('A coding agent uses context compaction during long tasks.', 'context compaction'),
+    ('Coding agents should use tokens efficiently within token budgets.', 'tokens efficiently'),
+])
+def test_general_context_efficiency_phrasing_not_product_or_author_rules(text,expected):
+    from app.topic_quality import context_matches
+    assert expected in context_matches(text.lower())
+
+
+@pytest.mark.parametrize('text',[
+    'Soil compaction improves the road foundation.',
+    'The terminal records tool output from a weather script.',
+    'A coding agent writes a program.',
+    'This context explains local history; the discussion includes no model.',
+    'Authentication tokens in the login prompt appear in tool output.',
+])
+def test_ambiguous_compaction_or_tool_output_is_not_context_efficiency(text):
+    from app.topic_quality import context_matches
+    assert context_matches(text.lower())==[]
