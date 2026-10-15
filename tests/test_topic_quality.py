@@ -62,17 +62,17 @@ def test_clear_protocol_singleton_is_named_and_remains_a_single_signal(text):
     assert t['momentum'] is None
 
 
-@pytest.mark.parametrize('text',[
-    'Protocol updates are coming soon; more information next week.',
-    'Network protocol transport uses encrypted packets between services.',
-    'AI agents are interesting and surprisingly different.',
+@pytest.mark.parametrize('text,title',[
+    ('Protocol updates are coming soon; more information next week.', 'Protocol Updates'),
+    ('Network protocol transport uses encrypted packets between services.', 'Network Protocols & Data Transport'),
+    ('AI agents are interesting and surprisingly different.', 'AI Agent Discussion'),
 ])
-def test_ambiguous_singletons_stay_unconfirmed(text):
+def test_singletons_have_descriptive_subjects_without_claiming_confirmation(text,title):
     t=detect([post(text,0)],[],NOW,4,DEFAULT_BRIEF)[0]
-    assert t['title']=='Unconfirmed Single-Post Signal'
-    assert t['theme_labels']['zh']=='待确认的单帖信号'
-    assert t['insight_support']==[]
-    assert '待确认' in t['shared_insight']['zh']
+    assert t['title']==title
+    assert t['confirmation']=='single_source'
+    assert t['momentum'] is None and t['weights']['momentum']==0
+    assert '不代表独立来源支持' in t['shared_insight']['zh']
 
 
 def test_one_detailed_post_cannot_supply_a_group_wide_engineering_claim():

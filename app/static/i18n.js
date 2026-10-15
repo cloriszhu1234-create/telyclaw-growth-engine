@@ -196,6 +196,14 @@ Object.assign(ZH,{
   "Context Efficiency for AI Coding Agents": "AI 编程智能体的上下文效率",
   "Execution Harnesses for AI Coding Agents": "AI 编程智能体的执行框架",
   "AI Agent Interoperability & Communication Protocols": "AI Agent 互操作性与通信协议",
+  "AI Agent Framework Selection": "AI Agent 的框架选择",
+  "Prompt Templates for Engineering Leadership": "工程管理场景的提示词模板",
+  "Prompt Design & Templates": "提示词设计与模板",
+  "AI Prompt Design": "AI 提示词设计",
+  "Network Protocols & Data Transport": "网络协议与数据传输",
+  "Protocol Updates": "协议更新",
+  "AI Agent Discussion": "AI Agent 相关讨论",
+  "Source Text Needs Context": "原帖信息不足，需补充上下文",
   "Unconfirmed Single-Post Signal": "待确认的单帖信号",
   "Provisional Discussion Cluster": "待确认的讨论主题",
   "Shared Discussion Insight": "共同讨论洞察",
@@ -215,6 +223,7 @@ Object.assign(ZH,{
   "This draft has no recorded source mode. Inspect its source evidence before publishing.": "此草稿未记录来源模式，发布前请核查支持它的来源证据。"
 });
 const RULES = [
+ [/^Source topic: “(.+)”$/i,a=>`原帖议题：「${a}」`],
  [/^Provisional Discussion: (.+)$/i,a=>`待确认的讨论主题：${a}`],
  [/^Unexpected (?:token|end).*$/,()=> 'JSON 格式无效，请按照导入示例检查文件。'],
  [/^([a-z_]+):? Input should be greater than or equal to (\d+)$/, (a,b)=>`${tr(a)}不能小于 ${b}`],
