@@ -189,7 +189,22 @@ Object.assign(ZH,{
 "configured AI editorial scope (domain heuristic; validate audience fit)":"已配置的 AI 内容方向（领域启发式判断；请核实受众契合度）",
 "Relevance inputs":"相关性依据"
 });
+Object.assign(ZH,{
+  "Engineering & Reliability of AI Coding Agents": "AI 编程智能体的工程化与可靠性",
+  "Feedback & Error Recovery for AI Coding Agents": "AI 编程智能体的反馈与错误恢复",
+  "Testing & Verification for AI Coding Agents": "AI 编程智能体的测试与验证",
+  "Context Efficiency for AI Coding Agents": "AI 编程智能体的上下文效率",
+  "Execution Harnesses for AI Coding Agents": "AI 编程智能体的执行框架",
+  "AI Agent Interoperability & Communication Protocols": "AI Agent 互操作性与通信协议",
+  "Unconfirmed Single-Post Signal": "待确认的单帖信号",
+  "Provisional Discussion Cluster": "待确认的讨论主题",
+  "Shared Discussion Insight": "共同讨论洞察",
+  "Topic grouping does not establish rising momentum.": "多帖聚合不等于上升趋势；历史数据不足时，无法判断趋势增速。",
+  "Evidence behind this insight": "查看洞察对应的来源线索",
+  "Inspect the original source posts below.": "请查看下方完整来源原文。"
+});
 const RULES = [
+ [/^Provisional Discussion: (.+)$/i,a=>`待确认的讨论主题：${a}`],
  [/^Unexpected (?:token|end).*$/,()=> 'JSON 格式无效，请按照导入示例检查文件。'],
  [/^([a-z_]+):? Input should be greater than or equal to (\d+)$/, (a,b)=>`${tr(a)}不能小于 ${b}`],
  [/^greater than or equal to (\d+)$/,a=>`不小于 ${a} 的数值`],
@@ -263,7 +278,7 @@ function translateUI(root=document.body){
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
   let node;
   while((node=walker.nextNode())){
-    if(node.parentElement?.closest('[data-raw],script,style,textarea,pre,code,#language-switch'))continue;
+    if(node.parentElement?.closest('[data-raw],[data-i18n-en],script,style,textarea,pre,code,#language-switch'))continue;
     const old=translatedNodes.get(node);
     const source=old&&node.data===old.rendered?old.source:node.data;
     const trimmed=source.trim();
@@ -271,6 +286,10 @@ function translateUI(root=document.body){
     translatedNodes.set(node,{source,rendered});
     if(node.data!==rendered)node.data=rendered;
   }
+  root.querySelectorAll?.('[data-i18n-en]').forEach(el=>{
+    const value=el.dataset[uiLanguage==='zh'?'i18nZh':'i18nEn'];
+    if(value!==undefined&&el.textContent!==value)el.textContent=value;
+  });
   root.querySelectorAll?.('[placeholder],[aria-label]').forEach(el=>{
     for(const attr of ['placeholder','aria-label']){
       if(!el.hasAttribute(attr))continue;

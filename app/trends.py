@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from .topic_quality import presentation
 from .semantics import CONCEPTS, GENERIC, concept_evidence, shared_theme, theme_for, EDITORIAL_MOVES
 
 DEFAULT_BRIEF = {'positioning': 'Provisional positioning: AI-assisted growth workflows with human judgment. Confirm TelyClaw product capabilities before publishing.',
@@ -102,6 +103,9 @@ def detect(posts,prior,clock,hours,brief):
         title,keywords,centroid=topic_name(matrix,terms,[semantic_text(p['text'],keep_stop=True) for p in unique],indexes)
         theme,profiles,_=theme_for(evidence)
         if theme:title=CONCEPTS[theme][0]
+        canonical_title=title  # Keep existing publication/topic rollup identity.
+        quality=presentation(theme,evidence,canonical_title)
+        title=quality['labels']['en']
         authors=sorted({p['handle'].lower().removeprefix('@') for p in evidence})
         # All documents contribute to features/title; summary includes attributed source excerpts.
         centrality=cosine_similarity(matrix[indexes],centroid.reshape(1,-1)).ravel()
@@ -157,10 +161,10 @@ def detect(posts,prior,clock,hours,brief):
         move=(f"Create a practical comparison about {title.lower()}: contrast “{excerpts[0]['excerpt']}”"+
             (f" with “{excerpts[1]['excerpt']}”" if len(excerpts)>1 else ' with a clearly labeled counter-hypothesis')+
             f". Give {brief['audience']} one decision checklist and one measurable experiment; do not repeat the source claims as established facts.")
-        topics.append(dict(id=str(label),topic_key=hashlib.sha256(normalized(title).encode()).hexdigest()[:20],title=title,keywords=keywords,
+        topics.append(dict(id=str(label),topic_key=hashlib.sha256(normalized(canonical_title).encode()).hexdigest()[:20],title=title,keywords=keywords,
             summary=summary,editorial_move=EDITORIAL_MOVES.get(theme,'Validate the source claim with a second independent account before committing to a content experiment.'),
             relevance_evidence={'specific_keywords':specific,'domain_fit':domain_fit,'theme':theme},
-            theme=theme,theme_labels=({'en':CONCEPTS[theme][0],'zh':CONCEPTS[theme][1]} if theme else {}),
+            theme=theme,theme_labels=quality['labels'],shared_insight=quality['insight'],insight_support=quality['support'],
             concept_evidence=[{'post_id':p['id'],'concepts':profile} for p,profile in zip(evidence,profiles)],
             confirmation='multi_source' if len(authors)>1 else 'single_source',
             summary_method='Local multi-document extractive synthesis; attributed source excerpts are not independently verified.',

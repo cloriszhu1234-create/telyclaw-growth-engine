@@ -38,11 +38,40 @@ def run():
                 page.locator('#detail details').last.locator('summary').click()
                 # Protect raw post text even if it happens to equal an interface key.
                 now=datetime.now(timezone.utc)
+                # Test-only engineering concerns; no real source text or results.
+                discussions=[
+                    'A coding agent needs error feedback to recover from failed changes.',
+                    'A programming agent should troubleshoot failures with tests and verification.',
+                    'A coding assistant needs context compression for better token efficiency.',
+                    'A coding agent harness can execute complex software engineering tasks.',
+                ]
+                for i,text in enumerate(discussions):
+                    payload={'url':f'https://x.com/quality_{i}/status/{990001+i}',
+                             'handle':f'quality_{i}','text':text,
+                             'created_at':(now-timedelta(minutes=20)).isoformat()}
+                    assert page.request.post(base+'/api/manual/posts',data=payload).status==201
+                page.locator('[data-tab="opportunities"]').click()
+                page.locator('#mode').select_option('manual');page.locator('#window').select_option('168');page.locator('#analyze').click()
+                page.locator('.topic').first.wait_for()
+                page.wait_for_function("document.getElementById('detail').textContent.includes('共同讨论洞察')")
+                assert 'AI 编程智能体的工程化与可靠性' in page.locator('#detail h2').inner_text()
+                narrative=page.locator('#detail [data-i18n-en]').first
+                assert '所选 4 条帖子中，4 条' in narrative.inner_text()
+                assert '不代表行业共识或讨论量正在加速' in narrative.inner_text()
+                assert all('@quality_'+str(i) in narrative.inner_text() for i in range(4))
+                assert '历史数据不足' in page.locator('.topic').first.inner_text()
+                page.locator('[data-language="en"]').click()
+                assert '4 of 4 selected posts' in narrative.inner_text()
+                assert 'not evidence of consensus or accelerating discussion' in narrative.inner_text()
+                page.locator('[data-language="zh"]').click()
+                assert '所选 4 条帖子中，4 条' in narrative.inner_text()
+                page.locator('#mode').select_option('demo');page.locator('#analyze').click()
+                page.locator('.topic').first.wait_for()
                 raw='Performance'
                 payload={'url':'https://x.com/test_fixture/status/900001','handle':'test_fixture','text':raw,'created_at':(now-timedelta(minutes=20)).isoformat()}
                 assert page.request.post(base+'/api/manual/posts',data=payload).status==201
                 page.locator('[data-tab="sources"]').click()
-                page.reload();page.locator('#manual-list .evidence').wait_for(state='attached')
+                page.reload();page.locator('#manual-list .evidence').first.wait_for(state='attached')
                 page.locator('[data-tab="sources"]').click()
                 assert page.locator('#manual-list [data-raw]').filter(has_text=raw).inner_text()==raw
                 page.locator('#manual-text').fill('English source text must stay unchanged. 中文原文亦保留。')
